@@ -1,13 +1,20 @@
-import React, { useState } from "react";
+import React, { useContext, useState } from "react";
 import { FcGoogle } from "react-icons/fc";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { DotLottieReact } from "@lottiefiles/dotlottie-react";
 import { IoMdEye, IoMdEyeOff } from "react-icons/io";
+import { AuthContext } from "../ContextApi/Context";
+import {  FaCheckCircle, FaGithubSquare } from "react-icons/fa";
 
 const Register = () => {
+  const {signInWithGoogle,signInWithGithub, signUp, notifys,notifye,setCurrentUser} = useContext(AuthContext);
   const location = useLocation();
   const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
+  const [requerment, setRequerment] = useState(false);
+  const [upercase, setUpercase] = useState(false);
+  const [number, setNumber] = useState(false);
+  const [lowercase, setLowercase] = useState(false);
   const handelsubmit = (e) => {
     e.preventDefault();
     const registerform = new FormData(e.target);
@@ -15,12 +22,46 @@ const Register = () => {
     const email = registerform.get("email");
     const password = registerform.get("password");
     const photo = registerform.get("photo");
-    const minLength = 8;
     const hasUpperCase = /[A-Z]/.test(password);
     const hasLowerCase = /[a-z]/.test(password);
-    if (password.length < minLength || hasUpperCase || hasLowerCase) {
-    }
+    const hasNumber = /[0-9]/.test(password);
+    if (password.length >= requerment && hasUpperCase && hasLowerCase && hasNumber) {
+      signUp(email, password)
+        .then((userCredential) => {
+          // Signed up
+          const user = userCredential.user;
+          setCurrentUser(user);
+          navigate(location?.state ? location?.state : "/");
+          notifys("Login Successfull")
+          // ...
+        })
+        .catch((error) => {
+    
+          notifye(error)
+          // ..
+        });
+
+      }else{
+        notifye("Password must contain at least 8 characters, one uppercase letter, one lowercase letter, and one number")
+      }
+
+
+
+
+  }
+
+           
+  const passwordCheck = (e) => {
+    const { value } = e.target;
+    setRequerment (value.length >= 8);
+    setUpercase (/[A-Z]/.test(value));
+    setNumber (/[0-9]/.test(value));
+    setLowercase (/[a-z]/.test(value));
+
   };
+
+
+
   return (
     <>
       <div className="hero bg-base-100 min-h-screen">
@@ -35,8 +76,20 @@ const Register = () => {
           <div className="card bg-base-100 w-full max-w-sm shrink-0 shadow-2xl">
             <div className="p-8 -mb-5">
               <p className="text-4xl text-center mb-5">Registration</p>
-              <button className="btn  btn-sm btn-block">
+              <button className="btn mb-3 btn-sm btn-block"
+              onClick={() => {
+                signInWithGoogle(navigate, location);
+              }}>
+                
                 <FcGoogle /> Continue With Google
+              </button>
+              <button
+                className="btn  btn-sm btn-block mb-2"
+                onClick={() => {
+                  signInWithGithub(navigate, location);
+                }}
+              >
+                <FaGithubSquare /> Continue With Github
               </button>
               <div className="divider">or</div>
             </div>
@@ -89,6 +142,7 @@ const Register = () => {
                 </label>
                 <input
                   type={showPassword ? "text" : "password"}
+                  onChange={passwordCheck}
                   name="password"
                   placeholder="password"
                   className="input input-bordered"
@@ -103,9 +157,16 @@ const Register = () => {
                   {showPassword ? <IoMdEye /> : <IoMdEyeOff />}
                 </p>
                 <p>Your password must contain:</p>
-                <li>At least 8 characters</li>
-                <li>At least one uppercase letter</li>
-                <li>At least one lowercase letter</li>
+                <ul>
+                <li className={`${requerment?"text-green-500":""} flex items-center gap-1`}><FaCheckCircle />At least 8 characters</li>
+                <li className={`${number?"text-green-500":""} flex items-center gap-1`}><FaCheckCircle />
+                  At least one number</li>
+                <li className={`${upercase?"text-green-500":""} flex items-center gap-1`}><FaCheckCircle />
+                At least one uppercase letter</li>
+                <li className={`${lowercase?"text-green-500":""} flex items-center gap-1`}><FaCheckCircle />
+                At least one lowercase letter</li>
+
+                </ul>
               </div>
               <div className="form-control mt-6">
                 <button className="btn btn-primary">Register</button>
