@@ -7,7 +7,7 @@ import { AuthContext } from "../ContextApi/Context";
 import {  FaCheckCircle, FaGithubSquare } from "react-icons/fa";
 
 const Register = () => {
-  const {signInWithGoogle,signInWithGithub, signUp, notifys,notifye,setCurrentUser} = useContext(AuthContext);
+  const {signInWithGoogle,signInWithGithub, signUp, notifys,notifye,setCurrentUser,updateuser} = useContext(AuthContext);
   const location = useLocation();
   const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
@@ -15,6 +15,7 @@ const Register = () => {
   const [upercase, setUpercase] = useState(false);
   const [number, setNumber] = useState(false);
   const [lowercase, setLowercase] = useState(false);
+  // handel submit
   const handelsubmit = (e) => {
     e.preventDefault();
     const registerform = new FormData(e.target);
@@ -26,19 +27,18 @@ const Register = () => {
     const hasLowerCase = /[a-z]/.test(password);
     const hasNumber = /[0-9]/.test(password);
     if (password.length >= requerment && hasUpperCase && hasLowerCase && hasNumber) {
+      // create user with email and password
       signUp(email, password)
         .then((userCredential) => {
-          // Signed up
           const user = userCredential.user;
+          // update user profile
           setCurrentUser(user);
+          updateuser({ displayName: name, photoURL: photo })
           navigate(location?.state ? location?.state : "/");
           notifys("Login Successfull")
-          // ...
         })
         .catch((error) => {
-    
           notifye(error)
-          // ..
         });
 
       }else{
@@ -50,7 +50,7 @@ const Register = () => {
 
   }
 
-           
+          //  password check
   const passwordCheck = (e) => {
     const { value } = e.target;
     setRequerment (value.length >= 8);

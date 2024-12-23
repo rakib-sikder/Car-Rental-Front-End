@@ -1,7 +1,10 @@
 // pages/AddCar.jsx
-import { useState } from "react";
+import axios from "axios";
+import { useContext, useState } from "react";
+import { AuthContext } from "../ContextApi/Context";
 
 const AddCar = () => {
+  const {notifys,notifye,} = useContext(AuthContext);
   const [formData, setFormData] = useState({
     model: "",
     dailyPrice: "",
@@ -12,7 +15,6 @@ const AddCar = () => {
     imageUrl: "",
     location: "",
   });
-  
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -22,6 +24,16 @@ const AddCar = () => {
   const handleSubmit = (e) => {
     e.preventDefault();
     console.log("Car Added:", formData);
+
+    axios.post('http://localhost:5000/addcar', formData)
+    .then((response) =>{
+      response.data.acknowledged && notifys("Car Added Successfully");
+
+    })
+    .catch( (error) =>{
+      notifye(error);
+    });
+
   };
 
   return (

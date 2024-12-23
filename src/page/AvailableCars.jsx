@@ -1,9 +1,24 @@
-// AvailableCars 
+
+import axios from "axios";
+import { useEffect } from "react";
 import { useState } from "react";
 
 
-const AvailableCars = ({ cars }) => {
-  const [viewMode, setViewMode] = useState("grid"); // grid or list
+const AvailableCars = () => {
+  const [viewMode, setViewMode] = useState("grid");
+  const [cars, setCars] = useState([]);
+  console.log(cars);
+  
+  useEffect(() => {
+
+    axios.get('http://localhost:5000/cars')
+    .then((response) =>{
+      setCars(response.data);
+    })
+    .catch( (error) =>{
+      console.log(error);
+    });
+  },[]);
 
   return (
     <div className="p-8">
@@ -17,7 +32,7 @@ const AvailableCars = ({ cars }) => {
         </button>
       </div>
       <div className={`grid ${viewMode === "grid" ? "grid-cols-3 gap-6" : "grid-cols-1 gap-4"}`}>
-        {/* {cars.map((car, idx) => (
+        {cars.map((car, idx) => (
           <div key={idx} className="card bg-base-200 shadow-md">
             <figure>
               <img src={car.image} alt={car.model} className="w-full h-48 object-cover" />
@@ -28,7 +43,7 @@ const AvailableCars = ({ cars }) => {
               <button className="btn btn-primary">Book Now</button>
             </div>
           </div>
-        ))} */}
+        ))}
 
         hello cars
       </div>
