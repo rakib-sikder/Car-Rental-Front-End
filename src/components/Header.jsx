@@ -1,10 +1,11 @@
-import { Link, NavLink } from "react-router-dom";
-import { useState } from "react";
+import { Link, NavLink, useNavigate } from "react-router-dom";
+import { useContext, useState } from "react";
 import { DotLottieReact } from "@lottiefiles/dotlottie-react";
+import { AuthContext } from "../ContextApi/Context";
 
 const Header = () => {
-  const [isLoggedIn, setIsLoggedIn] = useState(true); // Replace with actual auth state
-
+  const { currentUser ,SignOut } = useContext(AuthContext);
+  const navigate=useNavigate()
   return (
     <header className="bg-base-100 shadow-md">
       <div className="container mx-auto flex items-center justify-between p-4">
@@ -42,7 +43,7 @@ const Header = () => {
           >
             Available Cars
           </NavLink>
-          {isLoggedIn ? (
+          {currentUser ? (
             <>
               <NavLink
                 to="/add-car"
@@ -75,7 +76,7 @@ const Header = () => {
                 My Bookings
               </NavLink>
               <button
-                onClick={() => setIsLoggedIn(false)}
+                onClick={() =>{ SignOut(navigate)}}
                 className="btn btn-primary"
               >
                 Logout
