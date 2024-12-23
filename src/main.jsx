@@ -14,6 +14,7 @@ import AddCar from "./page/AddCar";
 import Home from "./page/Home";
 import MyCars from "./page/MyCars";
 import MyBookings from "./page/MyBookings";
+import { AuthProviderAndContext } from "./ContextApi/Context";
 
 const router = createBrowserRouter([
   {
@@ -61,6 +62,8 @@ const router = createBrowserRouter([
 
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
+    <AuthProviderAndContext>
     <RouterProvider router={router} />
+    </AuthProviderAndContext>
   </React.StrictMode>
 );
