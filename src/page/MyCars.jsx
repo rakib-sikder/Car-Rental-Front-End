@@ -6,12 +6,11 @@ import { AuthContext } from "../ContextApi/Context";
 import Swal from "sweetalert2";
 import { Link, useNavigate } from "react-router-dom";
 
-
 const MyCars = () => {
   const { navigate } = useNavigate();
   const [cars, setCars] = useState([]);
-  const { currentUser, notifys,notifye } = useContext(AuthContext);
-  const [ dependensi, setdependensi ] = useState(true);
+  const { currentUser, notifys, notifye } = useContext(AuthContext);
+  const [dependensi, setdependensi] = useState(true);
 
   // get user added cars
   useEffect(() => {
@@ -23,9 +22,8 @@ const MyCars = () => {
       .catch((error) => {
         notifye(error);
       });
-      // set some dependency for refresh
-  }, [currentUser, navigate,dependensi]);
-
+    // set some dependency for refresh
+  }, [currentUser, navigate, dependensi]);
 
   // click on delete button to delete car
   const handleDelete = (id) => {
@@ -56,7 +54,7 @@ const MyCars = () => {
     });
   };
 
-  // update car details 
+  // update car details
   const [formData, setFormData] = useState({
     model: "",
     dailyPrice: "",
@@ -71,9 +69,8 @@ const MyCars = () => {
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData({ ...formData, [name]: value });
-  
   };
-  
+
   // update car details on click of update button
   const handleupdate = (e) => {
     e.preventDefault();
@@ -82,12 +79,10 @@ const MyCars = () => {
       .then((response) => {
         setdependensi(response.data.acknowledged);
         response.data.acknowledged && notifys("Car Updated Successfully");
-        
       })
       .catch((error) => {
-        notifye(error)})
-
-    
+        notifye(error);
+      });
   };
 
   // get spacefic car details to update
@@ -101,11 +96,61 @@ const MyCars = () => {
         notifye(error);
       });
   };
+// date strucure set
+function parseDate(dateStr) {
+  const [day, month, year] = dateStr.split("/"); // Split the string into day, month, year
+  return new Date(`${year}-${month}-${day}`); // Reformat to 'yyyy-mm-dd'
+}
+// sort cars by date
+const sortbyoldest = () => {
+  const oldest = [...cars].sort((a, b) => parseDate(a.date) - parseDate(b.date))
+    setCars(oldest)
+    console.log(oldest)
+ }
+ const sortbynewest = () => {
+  const newest = [...cars].sort((a, b) => parseDate(b.date) - parseDate(a.date))
+     setCars(newest)
+     console.log(newest)
+}
+
+  // sort cars by price
+   const sortbyhighprice = () => {
+    const price = [...cars].sort((a, b) => b.dailyPrice - a.dailyPrice);
+    setCars(price);
+      console.log(price)
+   }
+const sortbylowprice = () =>{
+  const price = [...cars].sort((a, b) => a.dailyPrice - b.dailyPrice);
+  setCars(price);
+  console.log(price)
+}
+   
+
+
+
+
   return (
     <div className="p-8 bg-base-100">
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-2xl font-bold">My Cars</h2>
-        <button className="btn btn-outline btn-primary">View</button>
+        <div className="flex gap-4">
+          <div>
+            <button onClick={sortbynewest} className="btn btn-outline btn-primary btn-sm rounded-r-none">
+              Newest
+            </button>
+            <button onClick={sortbyoldest} className="btn btn-outline btn-primary btn-sm rounded-l-none">
+              oldest
+            </button>
+          </div>
+          <div>
+            <button onClick={sortbyhighprice} className="btn btn-outline btn-primary btn-sm rounded-r-none">
+              Highest
+            </button>
+            <button onClick={sortbylowprice} className="btn btn-outline btn-primary btn-sm rounded-l-none">
+              Lowest
+            </button>
+          </div>
+        </div>
       </div>
       {cars.length !== 0 ? (
         <table className="table w-full">
@@ -134,11 +179,10 @@ const MyCars = () => {
                   >
                     Delete
                   </button>
-                  
+
                   <button
                     className="btn btn-primary btn-sm"
-                    onClick={() =>
-                    {
+                    onClick={() => {
                       document.getElementById("my_modal_5").showModal();
                       getupadtedid(car._id);
                     }}
@@ -230,11 +274,10 @@ const MyCars = () => {
                         </button>
                       </form>
                       <button
-                        onClick={() =>
-                        {
+                        onClick={() => {
                           document.getElementById("my_modal_5").close(),
-                         setdependensi(false);}
-                        }
+                            setdependensi(false);
+                        }}
                         className="btn btn-error btn-block"
                       >
                         {" "}

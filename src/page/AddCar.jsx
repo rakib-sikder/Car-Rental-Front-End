@@ -9,7 +9,6 @@ const AddCar = () => {
   const month = String(now.getMonth() + 1);
   const year = String(now.getFullYear());
   const date = `${day}/${month}/${year}`;
-  console.log(date);
 
   const {notifys,notifye, currentUser} = useContext(AuthContext);
   const [formData, setFormData] = useState({
