@@ -4,7 +4,14 @@ import { useContext, useState } from "react";
 import { AuthContext } from "../ContextApi/Context";
 
 const AddCar = () => {
-  const {notifys,notifye,} = useContext(AuthContext);
+  const now = new Date();
+  const day = String(now.getDate());
+  const month = String(now.getMonth() + 1);
+  const year = String(now.getFullYear());
+  const date = `${day}/${month}/${year}`;
+  console.log(date);
+
+  const {notifys,notifye, currentUser} = useContext(AuthContext);
   const [formData, setFormData] = useState({
     model: "",
     dailyPrice: "",
@@ -15,16 +22,16 @@ const AddCar = () => {
     imageUrl: "",
     location: "",
   });
-
+console.log(currentUser);
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData({ ...formData, [name]: value });
+    setFormData({ ...formData, userEmail: currentUser?.email,date:date,[name]: value});
   };
-
+  
+ 
   const handleSubmit = (e) => {
     e.preventDefault();
-    console.log("Car Added:", formData);
-
+    
     axios.post('http://localhost:5000/addcar', formData)
     .then((response) =>{
       response.data.acknowledged && notifys("Car Added Successfully");

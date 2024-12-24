@@ -28,7 +28,7 @@ const AvailableCars = () => {
           onClick={() => setViewMode(viewMode === "grid" ? "list" : "grid")}
           className="btn btn-outline btn-primary"
         >
-          Toggle {viewMode === "grid" ? "List" : "Grid"} View
+           {viewMode === "grid" ? "List" : "Grid"} View
         </button>
       </div>
       <div className={`grid ${viewMode === "grid" ? "grid-cols-3 gap-6" : "grid-cols-1 gap-4"}`}>
