@@ -22,10 +22,10 @@ const AddCar = () => {
     imageUrl: "",
     location: "",
   });
-console.log(currentUser);
+
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData({ ...formData, userEmail: currentUser?.email,date:date,[name]: value});
+    setFormData({ ...formData, addedBy: currentUser?.email,date:date,[name]: value});
   };
   
  
@@ -67,6 +67,7 @@ console.log(currentUser);
           name="availability"
           className="select select-bordered"
           onChange={handleChange}
+          required
         >
           <option value={true}>Available</option>
           <option value={false}>Unavailable</option>
@@ -77,18 +78,21 @@ console.log(currentUser);
           placeholder="Vehicle Registration Number"
           className="input input-bordered"
           onChange={handleChange}
+          required
         />
         <textarea
           name="features"
           placeholder="Features (e.g., GPS, AC)"
           className="textarea textarea-bordered"
           onChange={handleChange}
+          required
         ></textarea>
         <textarea
           name="description"
           placeholder="Description"
           className="textarea textarea-bordered"
           onChange={handleChange}
+          required
         ></textarea>
         <input
           type="url"
@@ -96,6 +100,7 @@ console.log(currentUser);
           placeholder="Image URL"
           className="input input-bordered"
           onChange={handleChange}
+          required
         />
         <input
           type="text"
@@ -103,6 +108,7 @@ console.log(currentUser);
           placeholder="Location"
           className="input input-bordered"
           onChange={handleChange}
+          required
         />
         <button type="submit" className="btn btn-primary">
           Add Car

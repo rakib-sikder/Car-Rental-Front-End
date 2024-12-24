@@ -44,8 +44,6 @@ const AvailableCars = () => {
             </div>
           </div>
         ))}
-
-        hello cars
       </div>
     </div>
   );
