@@ -15,6 +15,7 @@ import Home from "./page/Home";
 import MyCars from "./page/MyCars";
 import MyBookings from "./page/MyBookings";
 import { AuthProviderAndContext } from "./ContextApi/Context";
+import CarDetails from "./page/CarDetails";
 
 const router = createBrowserRouter([
   {
@@ -39,6 +40,10 @@ const router = createBrowserRouter([
       {
         path: "/available-cars",
         element: <AvailableCars></AvailableCars>
+      },
+      {
+        path: "/cars-details/:id",
+        element: <CarDetails></CarDetails>
       },
       {
         path: "/add-car",

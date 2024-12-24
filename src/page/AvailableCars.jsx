@@ -2,12 +2,12 @@
 import axios from "axios";
 import { useEffect } from "react";
 import { useState } from "react";
+import { Link } from "react-router-dom";
 
 
 const AvailableCars = () => {
   const [viewMode, setViewMode] = useState("grid");
   const [cars, setCars] = useState([]);
-  console.log(cars);
   
   useEffect(() => {
 
@@ -16,7 +16,7 @@ const AvailableCars = () => {
       setCars(response.data);
     })
     .catch( (error) =>{
-      console.log(error);
+
     });
   },[]);
 
@@ -40,7 +40,7 @@ const AvailableCars = () => {
             <div className="card-body">
               <h3 className="card-title">{car.model}</h3>
               <p className="text-sm">Price: ${car.dailyPrice}/day</p>
-              <button className="btn btn-primary">Book Now</button>
+              <Link to={`/cars-details/${car._id}`} className="btn btn-primary mt-4">Book Now</Link>
             </div>
           </div>
         ))}

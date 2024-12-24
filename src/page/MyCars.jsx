@@ -105,29 +105,22 @@ function parseDate(dateStr) {
 const sortbyoldest = () => {
   const oldest = [...cars].sort((a, b) => parseDate(a.date) - parseDate(b.date))
     setCars(oldest)
-    console.log(oldest)
  }
  const sortbynewest = () => {
   const newest = [...cars].sort((a, b) => parseDate(b.date) - parseDate(a.date))
      setCars(newest)
-     console.log(newest)
 }
 
   // sort cars by price
    const sortbyhighprice = () => {
     const price = [...cars].sort((a, b) => b.dailyPrice - a.dailyPrice);
     setCars(price);
-      console.log(price)
    }
 const sortbylowprice = () =>{
   const price = [...cars].sort((a, b) => a.dailyPrice - b.dailyPrice);
   setCars(price);
-  console.log(price)
 }
-   
-
-
-
+  
 
   return (
     <div className="p-8 bg-base-100">
