@@ -10,6 +10,13 @@ const CarDetails = () => {
     const [response, setCar] = useState({});
     console.log(car)
   const [showModal, setShowModal] = useState(false);
+
+
+  const now = new Date();
+  const day = String(now.getDate());
+  const month = String(now.getMonth() + 1);
+  const year = String(now.getFullYear());
+  const date = `${year}-${month}-${day}`;
  
 
   useEffect(() => {
@@ -20,7 +27,7 @@ const CarDetails = () => {
 
   const handleBookNow = () => {
     if (!car.bookedBy ) {
-      setCar({ ...car,availability:false, booking: car.bookingCount + 1 ,bookedBy:[{email:currentUser.email,booked:true,name:currentUser.displayName,bookingDate:new Date()}]});
+      setCar({ ...car,availability:false, booking: car.bookingCount + 1 ,bookedBy:[{email:currentUser.email,booked:true,name:currentUser.displayName,bookingDate:[{start:date,end:date}]}]});
   
         setShowModal(true);
       }
