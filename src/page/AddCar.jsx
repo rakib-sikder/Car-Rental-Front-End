@@ -24,7 +24,7 @@ const AddCar = () => {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData({ ...formData, addedBy: currentUser?.email,dateAdded:date,booking:0,[name]: value});
+    setFormData({ ...formData, offer:{}, addedBy: currentUser?.email,dateAdded:date,bookingCount:0,[name]: value});
   };
   
  

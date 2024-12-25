@@ -4,6 +4,7 @@ import DatePicker from "react-datepicker"; // Ensure you install react-datepicke
 import "react-datepicker/dist/react-datepicker.css"; // Import DatePicker styles
 import { LiaTrashAlt } from "react-icons/lia";
 import { AuthContext } from "../ContextApi/Context";
+import BookingChart from "../components/BookingChart";
 
 const MyBooking = () => {
   const { currentUser,notifye,notifys } = useContext(AuthContext);
@@ -84,9 +85,10 @@ const MyBooking = () => {
       imageUrl: Cancel.imageUrl,
       location: Cancel.location,
       model: Cancel.model,
+      offer: Cancel.offer,
       registrationNumber: Cancel.registrationNumber,
     });
-    setShowModalC(true);
+    setShowModalC(true); 
     setCancelid(id);
   };
   const confirmCancelBooking = () => {
@@ -234,6 +236,8 @@ const MyBooking = () => {
       </div>
     </div>
   )}
+
+  <BookingChart bookings={bookings} > </BookingChart>
 </div>
 
   );
