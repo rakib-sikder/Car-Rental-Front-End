@@ -7,6 +7,7 @@ import { Link } from "react-router-dom";
 
 const AvailableCars = () => {
   const [viewMode, setViewMode] = useState("grid");
+  const [priceSort, setPriceSort] = useState(true);
   const [cars, setCars] = useState([]);
   const [filteredCars, setFilteredCars] = useState([]);
 
@@ -44,25 +45,34 @@ const AvailableCars = () => {
 
 
 
+
   return (
     <div className="p-8">
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-2xl font-bold">Available Cars</h2>
+        <div>
+          {/* sort by price  */}
+          <button
+          onClick={() => {setPriceSort(!priceSort), setCars(cars.sort((a, b) => (priceSort ? a.dailyPrice - b.dailyPrice : b.dailyPrice - a.dailyPrice)))}}
+          className="btn btn-outline btn-primary mr-2">
+            {priceSort ? "Lowest price" : "Highest Price"}
+          </button>
         <button
           onClick={() => setViewMode(viewMode === "grid" ? "list" : "grid")}
           className="btn btn-outline btn-primary"
         >
            {viewMode === "grid" ? "List" : "Grid"} View
         </button>
+        </div>
       </div>
       <div className="mb-6">
-      <form onSubmit={handleSearchChange} className="card-body">
+      <form onSubmit={handleSearchChange} className="flex justify-end items-end">
         
-        <div className="form-control">
-          <input type="text" name="search" placeholder="search" className="input input-bordered" />
+        <div className="form-control ">
+          <input type="text" name="search" placeholder="search" className="input input-bordered rounded-r-none" />
         </div>
-        <div className="form-control mt-6">
-          <button className="btn btn-primary">Search</button>
+        <div className="form-control  mt-6">
+          <button className="btn rounded-l-none btn-primary">Search</button>
         </div>
       </form>
       </div>
