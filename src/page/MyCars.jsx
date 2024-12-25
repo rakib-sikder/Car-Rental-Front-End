@@ -1,18 +1,15 @@
-// pages/MyCars.jsx
 import axios from "axios";
-import { useContext, useEffect } from "react";
-import { useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import { AuthContext } from "../ContextApi/Context";
 import Swal from "sweetalert2";
 import { Link, useNavigate } from "react-router-dom";
 
 const MyCars = () => {
-  const { navigate } = useNavigate();
+  const navigate = useNavigate();
   const [cars, setCars] = useState([]);
   const { currentUser, notifys, notifye } = useContext(AuthContext);
   const [dependensi, setdependensi] = useState(true);
 
-  // get user added cars
   useEffect(() => {
     axios
       .get(`http://localhost:5000/userAddedCars/${currentUser?.email}`)
@@ -22,10 +19,8 @@ const MyCars = () => {
       .catch((error) => {
         notifye(error);
       });
-    // set some dependency for refresh
   }, [currentUser, navigate, dependensi]);
 
-  // click on delete button to delete car
   const handleDelete = (id) => {
     Swal.fire({
       title: "Are you sure you want to delete this review?",
@@ -54,7 +49,6 @@ const MyCars = () => {
     });
   };
 
-  // update car details
   const [formData, setFormData] = useState({
     model: "",
     dailyPrice: "",
@@ -65,16 +59,15 @@ const MyCars = () => {
     imageUrl: "",
     location: "",
   });
-  // type to change the value of input field
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData({ ...formData, [name]: value });
   };
 
-  // update car details on click of update button
   const handleupdate = (e) => {
     e.preventDefault();
-    document.getElementById("my_modal_5").close()
+    document.getElementById("my_modal_5").close();
     axios
       .put(`http://localhost:5000/carsupdate/${formData._id}`, formData)
       .then((response) => {
@@ -86,9 +79,7 @@ const MyCars = () => {
       });
   };
 
-  // get spacefic car details to update
   const getupadtedid = (id) => {
-    
     axios
       .get(`http://localhost:5000/cars/${id}`)
       .then((response) => {
@@ -98,203 +89,197 @@ const MyCars = () => {
         notifye(error);
       });
   };
-// date strucure set
-function parseDate(dateStr) {
-  const [day, month, year] = dateStr.split("-"); // Split the string into day, month, year
-  return new Date(`${year}-${month}-${day}`); // Reformat to 'yyyy-mm-dd'
-}
-// sort cars by date
-const sortbyoldest = () => {
-  const oldest = [...cars].sort((a, b) => parseDate(a.dateAdded) - parseDate(b.dateAdded))
-    setCars(oldest)
- }
- const sortbynewest = () => {
-  const newest = [...cars].sort((a, b) => parseDate(b.dateAdded) - parseDate(a.dateAdded))
-     setCars(newest)
-}
 
-  // sort cars by price
-   const sortbyhighprice = () => {
+  function parseDate(dateStr) {
+    const [day, month, year] = dateStr.split("-");
+    return new Date(`${year}-${month}-${day}`);
+  }
+
+  const sortbyoldest = () => {
+    const oldest = [...cars].sort((a, b) => parseDate(a.dateAdded) - parseDate(b.dateAdded));
+    setCars(oldest);
+  };
+
+  const sortbynewest = () => {
+    const newest = [...cars].sort((a, b) => parseDate(b.dateAdded) - parseDate(a.dateAdded));
+    setCars(newest);
+  };
+
+  const sortbyhighprice = () => {
     const price = [...cars].sort((a, b) => b.dailyPrice - a.dailyPrice);
     setCars(price);
-   }
-const sortbylowprice = () =>{
-  const price = [...cars].sort((a, b) => a.dailyPrice - b.dailyPrice);
-  setCars(price);
-}
-  
+  };
+
+  const sortbylowprice = () => {
+    const price = [...cars].sort((a, b) => a.dailyPrice - b.dailyPrice);
+    setCars(price);
+  };
 
   return (
-    <div className="p-8 bg-base-100">
-      <div className="flex justify-between items-center mb-6">
-        <h2 className="text-2xl font-bold">My Cars</h2>
-        <div className="flex gap-4">
-          <div>
-            <button onClick={sortbynewest} className="btn btn-outline btn-primary btn-sm rounded-r-none">
+    <div className="p-4 sm:p-8 bg-base-100">
+      <div className="flex flex-wrap justify-between items-center mb-6 gap-4">
+        <h2 className="text-xl sm:text-2xl font-bold">My Cars</h2>
+        <div className="flex flex-wrap gap-4">
+          <div className="flex gap-4">
+            <button onClick={sortbynewest} className="btn btn-outline btn-primary btn-sm">
               Newest
             </button>
-            <button onClick={sortbyoldest} className="btn btn-outline btn-primary btn-sm rounded-l-none">
-              oldest
+            <button onClick={sortbyoldest} className="btn btn-outline btn-primary btn-sm">
+              Oldest
             </button>
           </div>
-          <div>
-            <button onClick={sortbyhighprice} className="btn btn-outline btn-primary btn-sm rounded-r-none">
+          <div className="flex gap-4">
+            <button onClick={sortbyhighprice} className="btn btn-outline btn-primary btn-sm">
               Highest
             </button>
-            <button onClick={sortbylowprice} className="btn btn-outline btn-primary btn-sm rounded-l-none">
+            <button onClick={sortbylowprice} className="btn btn-outline btn-primary btn-sm">
               Lowest
             </button>
           </div>
         </div>
       </div>
       {cars.length !== 0 ? (
-        <table className="table w-full">
-          <thead className="text-center">
-            <tr>
-              <th>Image</th>
-              <th>Model</th>
-              <th>Price</th>
-              <th>Availability</th>
-              <th>Date</th>
-              <th>Actions Button</th>
-            </tr>
-          </thead>
-          <tbody className="text-center">
-            {cars?.map((car) => (
-              <tr key={car._id}>
-                <td><img src={car.imageUrl} alt="" className="w-[100px] h-[50px]" /></td>
-                <td>{car.model}</td>
-                <td>${car.dailyPrice}/day</td>
-                <td>{car.availability ? "Available" : "Unavailable"}</td>
-                <td>{car.dateAdded}</td>
-                <td className="flex justify-center">
-                  <button
-                    onClick={() => handleDelete(car._id)}
-                    className="btn btn-sm btn-error"
-                  >
-                    Delete
-                  </button>
-
-                  <button
-                    className="btn btn-primary btn-sm"
-                    onClick={() => {
-                      document.getElementById("my_modal_5").showModal();
-                      getupadtedid(car._id);
-                    }}
-                  >
-                    Updated
-                  </button>
-                  <dialog
-                    id="my_modal_5"
-                    className="modal modal-bottom sm:modal-middle"
-                  >
-                    <div className="modal-box">
-                      <form
-                        onSubmit={handleupdate}
-                        className="grid grid-cols-1 gap-4"
-                      >
-                        <input
-                          type="text"
-                          name="model"
-                          placeholder="Car Model"
-                          className="input input-bordered"
-                          onChange={handleChange}
-                          value={formData.model}
-                          required
-                        />
-                        <input
-                          type="number"
-                          name="dailyPrice"
-                          placeholder="Daily Rental Price"
-                          className="input input-bordered"
-                          onChange={handleChange}
-                          required
-                          value={formData.dailyPrice}
-                        />
-                        <select
-                          name="availability"
-                          className="select select-bordered"
-                          onChange={handleChange}
-                          required
-                          value={formData.availability}
-                        >
-                          <option value={true}>Available</option>
-                          <option value={false}>Unavailable</option>
-                        </select>
-                        <input
-                          type="text"
-                          name="registrationNumber"
-                          placeholder="Vehicle Registration Number"
-                          className="input input-bordered"
-                          onChange={handleChange}
-                          required
-                          value={formData.registrationNumber}
-                        />
-                        <textarea
-                          name="features"
-                          placeholder="Features (e.g., GPS, AC)"
-                          className="textarea textarea-bordered"
-                          onChange={handleChange}
-                          required
-                          value={formData.features}
-                        ></textarea>
-                        <textarea
-                          name="description"
-                          placeholder="Description"
-                          className="textarea textarea-bordered"
-                          onChange={handleChange}
-                          required
-                          value={formData.description}
-                        ></textarea>
-                        <input
-                          type="url"
-                          name="imageUrl"
-                          placeholder="Image URL"
-                          className="input input-bordered"
-                          onChange={handleChange}
-                          required
-                          value={formData.imageUrl}
-                        />
-                        <input
-                          type="text"
-                          name="location"
-                          placeholder="Location"
-                          className="input input-bordered"
-                          onChange={handleChange}
-                          required
-                          value={formData.location}
-                        />
-                        <button type="submit" className="btn btn-primary">
-                          update
-                        </button>
-                      </form>
-                      <button
-                        onClick={() => {
-                          document.getElementById("my_modal_5").close(),
-                            setdependensi(false);
-                        }}
-                        className="btn btn-error btn-block"
-                      >
-                        {" "}
-                        cancle
-                      </button>
-                    </div>
-                  </dialog>
-                </td>
+        <div className="overflow-x-auto">
+          <table className="table w-full">
+            <thead className="text-center">
+              <tr>
+                <th>Image</th>
+                <th>Model</th>
+                <th>Price</th>
+                <th>Availability</th>
+                <th>Booking count</th>
+                <th>Date</th>
+                <th>Actions</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody className="text-center">
+              {cars?.map((car) => (
+                <tr key={car._id}>
+                  <td><img src={car.imageUrl} alt="" className="w-[100px] h-[50px]" /></td>
+                  <td>{car.model}</td>
+                  <td>${car.dailyPrice}/day</td>
+                  <td>{car.availability ? "Available" : "Unavailable"}</td>
+                  <td>{car.bookingCount}</td>
+                  <td>{car.dateAdded}</td>
+                  <td className="flex flex-col sm:flex-row justify-center gap-2">
+                    <button
+                      onClick={() => handleDelete(car._id)}
+                      className="btn btn-sm btn-error"
+                    >
+                      Delete
+                    </button>
+                    <button
+                      className="btn btn-primary btn-sm"
+                      onClick={() => {
+                        document.getElementById("my_modal_5").showModal();
+                        getupadtedid(car._id);
+                      }}
+                    >
+                      Update
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       ) : (
-        <>
-          <div className="flex flex-col gap-4 justify-center items-center">
-            <h1>No Cars Added Yet</h1>
-            <Link to="/add-car" className="btn btn-primary ">
-              Add Cars
-            </Link>
-          </div>
-        </>
+        <div className="flex flex-col gap-4 justify-center items-center">
+          <h1>No Cars Added Yet</h1>
+          <Link to="/add-car" className="btn btn-primary">
+            Add Cars
+          </Link>
+        </div>
       )}
+      <dialog id="my_modal_5" className="modal modal-bottom sm:modal-middle">
+        <div className="modal-box">
+          <form onSubmit={handleupdate} className="grid grid-cols-1 gap-4">
+            <input
+              type="text"
+              name="model"
+              placeholder="Car Model"
+              className="input input-bordered"
+              onChange={handleChange}
+              value={formData.model}
+              required
+            />
+            <input
+              type="number"
+              name="dailyPrice"
+              placeholder="Daily Rental Price"
+              className="input input-bordered"
+              onChange={handleChange}
+              required
+              value={formData.dailyPrice}
+            />
+            <select
+              name="availability"
+              className="select select-bordered"
+              onChange={handleChange}
+              required
+              value={formData.availability}
+            >
+              <option value={true}>Available</option>
+              <option value={false}>Unavailable</option>
+            </select>
+            <input
+              type="text"
+              name="registrationNumber"
+              placeholder="Vehicle Registration Number"
+              className="input input-bordered"
+              onChange={handleChange}
+              required
+              value={formData.registrationNumber}
+            />
+            <textarea
+              name="features"
+              placeholder="Features (e.g., GPS, AC)"
+              className="textarea textarea-bordered"
+              onChange={handleChange}
+              required
+              value={formData.features}
+            ></textarea>
+            <textarea
+              name="description"
+              placeholder="Description"
+              className="textarea textarea-bordered"
+              onChange={handleChange}
+              required
+              value={formData.description}
+            ></textarea>
+            <input
+              type="url"
+              name="imageUrl"
+              placeholder="Image URL"
+              className="input input-bordered"
+              onChange={handleChange}
+              required
+              value={formData.imageUrl}
+            />
+            <input
+              type="text"
+              name="location"
+              placeholder="Location"
+              className="input input-bordered"
+              onChange={handleChange}
+              required
+              value={formData.location}
+            />
+            <button type="submit" className="btn btn-primary">
+              Update
+            </button>
+          </form>
+          <button
+            onClick={() => {
+              document.getElementById("my_modal_5").close();
+              setdependensi(false);
+            }}
+            className="btn btn-error btn-block mt-1"
+          >
+            Cancel
+          </button>
+        </div>
+      </dialog>
     </div>
   );
 };

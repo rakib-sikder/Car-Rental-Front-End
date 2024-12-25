@@ -27,7 +27,7 @@ const CarDetails = () => {
 
   const handleBookNow = () => {
     if (!car.bookedBy ) {
-      setCar({ ...car,availability:false, booking: car.bookingCount + 1 ,bookedBy:[{email:currentUser.email,booked:true,name:currentUser.displayName,bookingDate:[{start:date,end:date}]}]});
+      setCar({ ...car,availability:false, bookingCount: car.bookingCount + 1 ,bookedBy:[{email:currentUser.email,booked:true,name:currentUser.displayName,bookingDate:[{start:date,end:date}]}]});
   
         setShowModal(true);
       }
