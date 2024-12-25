@@ -72,6 +72,8 @@ const AvailableCars = () => {
             </figure>
             <div className="card-body">
               <h3 className="card-title">{car.model}</h3>
+              <h4>{car.availability?<div className="badge badge-accent badge-outline">Available </div>:<div className="badge badge-error badge-outline">Unavailable </div>} </h4>
+              <p className="text-sm">Location: {car.location}</p>
               <p className="text-sm">Price: ${car.dailyPrice}/day</p>
               <Link to={`/cars-details/${car._id}`} className="btn btn-primary mt-4">Book Now</Link>
             </div>
