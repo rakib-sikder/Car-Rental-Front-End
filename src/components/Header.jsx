@@ -91,7 +91,7 @@ const Header = () => {
         
         <Link
         to="/"
-        className="flex items-center text-lg font-bold text-primary"
+        className="flex items-center text-lg font-bold text-primary text-nowrap"
       >
         <DotLottieReact
           src="https://lottie.host/6136aba0-30b3-4d88-b5ca-5fb6a5823760/ikwV6RkUa8.lottie"

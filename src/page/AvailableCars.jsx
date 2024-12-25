@@ -1,12 +1,13 @@
 import axios from "axios";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { Link } from "react-router-dom";
+import { debounce } from "lodash";
 
 const AvailableCars = () => {
   const [viewMode, setViewMode] = useState("grid");
   const [priceSort, setPriceSort] = useState(true);
   const [cars, setCars] = useState([]);
-  const [filteredCars, setFilteredCars] = useState([]);
+  const [searchTerm, setSearchTerm] = useState("");
 
   useEffect(() => {
     axios.get('http://localhost:5000/cars')
@@ -15,24 +16,27 @@ const AvailableCars = () => {
       });
   }, []);
 
-  const handleSearchChange = (e) => {
-    e.preventDefault();
-    const value = e.target.search.value;
-    setFilteredCars(cars?.filter(
-      (car) => car?.description?.toLowerCase()?.includes(value.toLowerCase()) ||
-        car?.model?.toLowerCase()?.includes(value.toLowerCase()) ||
-        car?.location?.toLowerCase()?.includes(value.toLowerCase()) ||
-        car?.dailyPrice?.toString()?.toLowerCase()?.includes(value.toLowerCase()) ||
-        car?.features?.toLowerCase()?.includes(value.toLowerCase())
-    ));
-    if (value.length > 0) {
-      setCars(filteredCars);
-    } else {
+  const debouncedSearch = useCallback(
+    debounce((value) => {
       axios.get('http://localhost:5000/cars')
         .then((response) => {
-          setCars(response.data);
+          const filteredCars = response.data.filter(
+            (car) => car?.description?.toLowerCase()?.includes(value.toLowerCase()) ||
+              car?.model?.toLowerCase()?.includes(value.toLowerCase()) ||
+              car?.location?.toLowerCase()?.includes(value.toLowerCase()) ||
+              car?.dailyPrice?.toString()?.toLowerCase()?.includes(value.toLowerCase()) ||
+              car?.features?.toLowerCase()?.includes(value.toLowerCase())
+          );
+          setCars(filteredCars);
         });
-    }
+    }, 300),
+    []
+  );
+
+  const handleSearchChange = (e) => {
+    const value = e.target.value;
+    setSearchTerm(value);
+    debouncedSearch(value);
   };
 
   return (
@@ -55,12 +59,19 @@ const AvailableCars = () => {
         </div>
       </div>
       <div className="mb-6">
-        <form onSubmit={handleSearchChange} className="flex flex-wrap justify-end items-end">
+        <form className="flex flex-wrap justify-end items-end">
           <div className="form-control">
-            <input type="text" name="search" placeholder="search" className="input input-bordered rounded-r-none" />
+            <input
+              type="text"
+              name="search"
+              placeholder="search"
+              className="input input-bordered rounded-r-none"
+              value={searchTerm}
+              onChange={handleSearchChange}
+            />
           </div>
           <div className="form-control">
-            <button className="btn rounded-l-none btn-primary">Search</button>
+            <button type="button" className="btn rounded-l-none btn-primary">Search</button>
           </div>
         </form>
       </div>
@@ -72,7 +83,7 @@ const AvailableCars = () => {
             </figure>
             <div className="card-body">
               <h3 className="card-title">{car.model}</h3>
-              <h4>{car.availability?<div className="badge badge-accent badge-outline">Available </div>:<div className="badge badge-error badge-outline">Unavailable </div>} </h4>
+              <h4>{car.availability ? <div className="badge badge-accent badge-outline">Available</div> : <div className="badge badge-error badge-outline">Unavailable</div>}</h4>
               <p className="text-sm">Location: {car.location}</p>
               <p className="text-sm">Price: ${car.dailyPrice}/day</p>
               <Link to={`/cars-details/${car._id}`} className="btn btn-primary mt-4">Book Now</Link>
