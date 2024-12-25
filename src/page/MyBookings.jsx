@@ -144,12 +144,10 @@ const MyBooking = () => {
             </td>
             <td className="px-2 py-2">${booking.dailyPrice}</td>
             <td className="px-2 py-2">
-              {new Date(booking.bookedBy[0].bookingDate[0].start) >= new Date() ? (
-                new Date() === new Date(booking.bookedBy[0].bookingDate[0].start) ? (
-                  <span className="text-green-500">Confirmed</span>
-                ) : (
-                  <span className="text-yellow-500">Pending</span>
-                )
+              {new Date() < new Date(booking.bookedBy[0].bookingDate[0].start) ? (
+                <span className="text-yellow-500">Pending</span>
+              ) : new Date() <= new Date(booking.bookedBy[0].bookingDate[0].end) ? (
+                <span className="text-green-500">Confirmed</span>
               ) : (
                 <span className="text-red-500">Canceled</span>
               )}
