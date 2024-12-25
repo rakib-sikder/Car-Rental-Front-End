@@ -4,6 +4,7 @@ import { DotLottieReact } from "@lottiefiles/dotlottie-react";
 import { AuthContext } from "../ContextApi/Context";
 
 const Header = () => {
+
   const { currentUser, SignOut } = useContext(AuthContext);
   const navigate = useNavigate();
   const navitems = (
@@ -58,7 +59,7 @@ const Header = () => {
   );
   return (
 
-    <div className="navbar bg-base-100">
+    <div className="navbar bg-transparent">
       <div className="navbar-start">
         <div className="dropdown">
           <div
@@ -112,8 +113,8 @@ const Header = () => {
         {currentUser ? (
           <NavLink
             onClick={() => {
-              SignOut();
-              navigate("/");
+              SignOut(navigate);
+              
             }}
             className={({ isActive }) =>
               `btn btn-primary btn-sm ${isActive ? "text-white" : "text-base-content"}`

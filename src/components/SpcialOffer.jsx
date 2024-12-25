@@ -31,7 +31,7 @@ const SpecialOffers = () => {
             whileHover={{ scale: 1.05 }}
           >
             <h3 className="text-xl font-bold mb-4">{offer.offer.title}</h3>
-            <p className="mb-6">{offer.offer.description}</p>
+            <p className="mb-6">{offer.offer.discription}</p>
             <Link to={`/cars-details/${offer._id} `} className="btn btn-outline text-white border-white hover:bg-white hover:text-black">
               Book Now
             </Link>
