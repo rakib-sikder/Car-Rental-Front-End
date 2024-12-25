@@ -20,7 +20,7 @@ const CarDetails = () => {
  
 
   useEffect(() => {
-    axios.get(`http://localhost:5000/cars/${id}`)
+    axios.get(`https://car-rental-system-zeta.vercel.app/cars/${id}`)
     .then((res) => { setResponse(res.data)})}
     , [showModal])
   
@@ -39,7 +39,7 @@ const CarDetails = () => {
   const confirmBooking = () => {
     setShowModal(false);
     notifys("Booking Confirmed");    
-    axios.put(`http://localhost:5000/carsupdate/${car._id}`, response)
+    axios.put(`https://car-rental-system-zeta.vercel.app/carsupdate/${car._id}`, response)
     .then((res) => { setResponse(response) })
   };
 

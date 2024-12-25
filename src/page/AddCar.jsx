@@ -31,7 +31,7 @@ const AddCar = () => {
   const handleSubmit = (e) => {
     e.preventDefault();
     
-    axios.post('http://localhost:5000/addcar', formData)
+    axios.post('https://car-rental-system-zeta.vercel.app/addcar', formData)
     .then((response) =>{
       response.data.acknowledged && notifys("Car Added Successfully");
 

@@ -7,7 +7,7 @@ const SpecialOffers = () => {
   const [offers, setOffers] = useState([]);
 
   useEffect(() => {
-    axios.get("http://localhost:5000/cars")
+    axios.get("https://car-rental-system-zeta.vercel.app/cars")
       .then((response) => {
         setOffers(response.data?.filter((car) => car.offer));
       });

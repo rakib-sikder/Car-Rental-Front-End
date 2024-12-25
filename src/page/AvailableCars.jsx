@@ -10,7 +10,7 @@ const AvailableCars = () => {
   const [searchTerm, setSearchTerm] = useState("");
 
   useEffect(() => {
-    axios.get('http://localhost:5000/cars')
+    axios.get('https://car-rental-system-zeta.vercel.app/cars')
       .then((response) => {
         setCars(response.data);
       });
@@ -18,7 +18,7 @@ const AvailableCars = () => {
 
   const debouncedSearch = useCallback(
     debounce((value) => {
-      axios.get('http://localhost:5000/cars')
+      axios.get('https://car-rental-system-zeta.vercel.app/cars')
         .then((response) => {
           const filteredCars = response.data.filter(
             (car) => car?.description?.toLowerCase()?.includes(value.toLowerCase()) ||

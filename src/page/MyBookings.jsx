@@ -22,7 +22,7 @@ const MyBooking = () => {
   // data loading from the server
   useEffect(() => {
     axios
-      .get(`http://localhost:5000/bookedcar/${currentUser?.email}`)
+      .get(`https://car-rental-system-zeta.vercel.app/bookedcar/${currentUser?.email}`)
       .then((response) => {
         setBookings(response.data);
       })
@@ -56,7 +56,7 @@ const MyBooking = () => {
     );
     setBookings(updatedBookings);
 
-    axios.put( `http://localhost:5000/carsupdate/${selectedBooking._id}`, {
+    axios.put( `https://car-rental-system-zeta.vercel.app/carsupdate/${selectedBooking._id}`, {
       bookedBy: [
         {
           ...selectedBooking.bookedBy[0],
@@ -93,12 +93,12 @@ const MyBooking = () => {
   };
   const confirmCancelBooking = () => {
     setShowModalC(false);
-    axios.delete(`http://localhost:5000/cars/${cancelid}`).then((response) => {
+    axios.delete(`https://car-rental-system-zeta.vercel.app/cars/${cancelid}`).then((response) => {
       console.log(response.data);
     });
 
     axios
-      .post(`http://localhost:5000/addcar`, data)
+      .post(`https://car-rental-system-zeta.vercel.app/addcar`, data)
 
       .then((res) => {
         console.log(res.data);
