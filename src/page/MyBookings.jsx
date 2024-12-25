@@ -6,7 +6,7 @@ import { LiaTrashAlt } from "react-icons/lia";
 import { AuthContext } from "../ContextApi/Context";
 
 const MyBooking = () => {
-  const { currentUser,notifye } = useContext(AuthContext);
+  const { currentUser,notifye,notifys } = useContext(AuthContext);
   const [bookings, setBookings] = useState([]);
   const [refresh, setRefresh] = useState(false);
   const [cancelid, setCancelid] = useState(false);
@@ -55,6 +55,18 @@ const MyBooking = () => {
     );
     setBookings(updatedBookings);
 
+    axios.put( `http://localhost:5000/carsupdate/${selectedBooking._id}`, {
+      bookedBy: [
+        {
+          ...selectedBooking.bookedBy[0],
+          bookingDate: [newDates],
+        },
+      ],
+    }).then((response) => {
+      notifys("Booking date modified successfully.");
+    });
+
+
     setShowModal(false);
   };
   // Cancel booking and update the car availability
@@ -94,131 +106,136 @@ const MyBooking = () => {
   };
 
   return (
-    <div className="p-8 bg-base-100">
-      <h2 className="text-2xl font-bold mb-4">My Bookings</h2>
-      <table className="table w-full">
-        <thead>
-          <tr className="bg-gray-200 w-full">
-            <th>Car Image</th>
-            <th>Car Model</th>
-            <th>Booking Start</th>
-            <th>Booking End</th>
-            <th>Total Price</th>
-            <th>Status</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {bookings?.map((booking) => (
-            <tr key={booking._id}>
-              <td>
-                <img
-                  src={booking.imageUrl}
-                  alt=""
-                  className="w-[100px] h-[50px]"
-                />
-              </td>
-              <td>{booking.model}</td>
-              <td>
-                {new Date(
-                  booking.bookedBy[0].bookingDate[0].start
-                ).toLocaleDateString()}
-              </td>
-              <td>
-                {new Date(
-                  booking.bookedBy[0].bookingDate[0].end
-                ).toLocaleDateString()}
-              </td>
+    <div className="p-4 sm:p-8 bg-base-100">
+  <h2 className="text-xl sm:text-2xl font-bold mb-4 text-center">My Bookings</h2>
 
-              <td>${booking.dailyPrice}</td>
+  {/* Responsive Table Container */}
+  <div className="overflow-x-auto">
+    <table className="table table-auto w-full">
+      <thead>
+        <tr className="bg-gray-200">
+          <th className="px-2 py-2">Car Image</th>
+          <th className="px-2 py-2">Car Model</th>
+          <th className="px-2 py-2">Booking Start</th>
+          <th className="px-2 py-2">Booking End</th>
+          <th className="px-2 py-2">Total Price</th>
+          <th className="px-2 py-2">Status</th>
+          <th className="px-2 py-2">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {bookings?.map((booking) => (
+          <tr key={booking._id} className="text-sm sm:text-base">
+            <td className="px-2 py-2">
+              <img
+                src={booking.imageUrl}
+                alt="Car"
+                className="w-16 h-16 sm:w-[100px] sm:h-[50px] object-cover"
+              />
+            </td>
+            <td className="px-2 py-2">{booking.model}</td>
+            <td className="px-2 py-2">
+              {new Date(booking.bookedBy[0].bookingDate[0].start).toLocaleDateString()}
+            </td>
+            <td className="px-2 py-2">
+              {new Date(booking.bookedBy[0].bookingDate[0].end).toLocaleDateString()}
+            </td>
+            <td className="px-2 py-2">${booking.dailyPrice}</td>
+            <td className="px-2 py-2">
               {new Date(booking.bookedBy[0].bookingDate[0].start) >= new Date() ? (
-                new Date()== new Date(booking.bookedBy[0].bookingDate[0].start)? <td className="text-green-500">confirmed</td>: <td className="text-yellow-500">pending</td>
-              ):(
-                <td className="text-red-500">canceled</td>
-                )}
-
-              <td className="flex flex-col gap-2">
+                new Date() === new Date(booking.bookedBy[0].bookingDate[0].start) ? (
+                  <span className="text-green-500">Confirmed</span>
+                ) : (
+                  <span className="text-yellow-500">Pending</span>
+                )
+              ) : (
+                <span className="text-red-500">Canceled</span>
+              )}
+            </td>
+            <td className="px-2 py-2">
+              <div className="flex flex-col sm:flex-row gap-2">
                 <button
-                  className="btn btn-sm btn-primary"
+                  className="btn btn-sm btn-primary text-nowrap flex items-center justify-center"
                   onClick={() => handleModifyDate(booking)}
                 >
-                  <i className="mr-2">📅</i> Modify Date
+                  📅 Modify Date
                 </button>
                 <button
-                  onClick={() => {
-                    cancelBookingBtn(booking._id);
-                  }}
-                  className="btn btn-error text-white btn-sm"
+                  onClick={() => cancelBookingBtn(booking._id)}
+                  className="btn btn-sm btn-error flex items-center justify-center text-white"
                 >
-                  <LiaTrashAlt />
+                  <LiaTrashAlt className="mr-1" />
                   Cancel
                 </button>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+              </div>
+            </td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  </div>
 
-      {/* Modal for date  */}
-      {showModal && (
-        <div className="modal modal-open">
-          <div className="modal-box">
-            <h3 className="font-bold text-lg">Modify Booking Dates</h3>
-            <div className="py-4">
-              <label className="block mb-2 font-semibold">Start Date</label>
-              <DatePicker
-                selected={newDates.start}
-                onChange={(date) => setNewDates({ ...newDates, start: date })}
-                className="input input-bordered w-full"
-              />
-              <label className="block mt-4 mb-2 font-semibold">End Date</label>
-              <DatePicker
-                selected={newDates.end}
-                onChange={(date) => setNewDates({ ...newDates, end: date })}
-                className="input input-bordered w-full"
-              />
-            </div>
-            <div className="modal-action">
-              <button className="btn btn-success" onClick={handleConfirm}>
-                Confirm
-              </button>
-              <button
-                className="btn btn-error"
-                onClick={() => setShowModal(false)}
-              >
-                Cancel
-              </button>
-            </div>
-          </div>
+  {/* Modal for Modify Date */}
+  {showModal && (
+    <div className="modal modal-open">
+      <div className="modal-box">
+        <h3 className="font-bold text-lg">Modify Booking Dates</h3>
+        <div className="py-4">
+          <label className="block mb-2 font-semibold">Start Date</label>
+          <DatePicker
+            selected={newDates.start}
+            onChange={(date) => setNewDates({ ...newDates, start: date })}
+            className="input input-bordered w-full"
+          />
+          <label className="block mt-4 mb-2 font-semibold">End Date</label>
+          <DatePicker
+            selected={newDates.end}
+            onChange={(date) => setNewDates({ ...newDates, end: date })}
+            className="input input-bordered w-full"
+          />
         </div>
-      )}
-
-      {/* Booking cancel Modal */}
-      {showModalC && (
-        <div className="modal modal-open">
-          <div className="modal-box">
-            <h3 className="font-bold text-lg"> Confirm Your Cancel</h3>
-            <p className="py-4">
-              Are you sure you want to cancel this booking?
-            </p>
-            <div className="modal-action">
-              <button
-                className="btn btn-error text-white"
-                onClick={confirmCancelBooking}
-              >
-                Yes
-              </button>
-              <button
-                className="btn btn-success text-white"
-                onClick={() => setShowModalC(false)}
-              >
-                No
-              </button>
-            </div>
-          </div>
+        <div className="modal-action">
+          <button className="btn btn-success" onClick={handleConfirm}>
+            Confirm
+          </button>
+          <button
+            className="btn btn-error"
+            onClick={() => setShowModal(false)}
+          >
+            Cancel
+          </button>
         </div>
-      )}
+      </div>
     </div>
+  )}
+
+  {/* Modal for Cancel Booking */}
+  {showModalC && (
+    <div className="modal modal-open">
+      <div className="modal-box">
+        <h3 className="font-bold text-lg">Confirm Your Cancel</h3>
+        <p className="py-4">
+          Are you sure you want to cancel this booking?
+        </p>
+        <div className="modal-action">
+          <button
+            className="btn btn-error text-white"
+            onClick={confirmCancelBooking}
+          >
+            Yes
+          </button>
+          <button
+            className="btn btn-success text-white"
+            onClick={() => setShowModalC(false)}
+          >
+            No
+          </button>
+        </div>
+      </div>
+    </div>
+  )}
+</div>
+
   );
 };
 
