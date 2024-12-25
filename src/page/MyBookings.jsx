@@ -1,14 +1,12 @@
 import axios from "axios";
 import { useContext, useEffect, useState } from "react";
 import { AuthContext } from "../ContextApi/Context";
-import Swal from "sweetalert2";
 
 // pages/MyBookings.jsx
 const MyBookings = () => {
   const { currentUser } = useContext(AuthContext);
   const [bookings, setBookings] = useState([]);
   const [update, setUpdate] = useState([]);
-  console.log(update)
   const [refresh, setRefresh] = useState(false);
   const [showModal, setShowModal] = useState(false);
 
@@ -26,10 +24,10 @@ const MyBookings = () => {
     const Cancel = bookings?.find((booking) => booking._id === id);
     setUpdate({
       addedBy: Cancel.addedBy,
-      availability: Cancel.availability,
-      booking: Cancel.booking - 1,
+      availability: true,
+      bookingCount: Cancel.bookingCount - 1,
       dailyPrice: Cancel.dailyPrice,
-      date: Cancel.date,
+      dateAdded: Cancel.dateAdded,
       description: Cancel.description,
       features: Cancel.features,
       imageUrl: Cancel.imageUrl,
@@ -74,11 +72,11 @@ const confirmBooking = (id) => {
         <tbody>
           {bookings?.map((booking) => (
             <tr key={booking._id}>
-              <td>{booking.imageUrl}</td>
+              <td><img src={booking.imageUrl} alt="" className="w-[100px] h-[50px]" /></td>
               <td>{booking.model}</td>
-              <td>{booking.date}</td>
-              <td>${booking.price}</td>
-              {booking.availability ? <td>Available</td> : <td>Unavilable</td>}
+              <td>{booking.dateAdded}</td>
+              <td>${booking.dailyPrice}</td>
+              {!booking.availability ? <td>Booked</td> : <td>Unavilable</td>}
               <td>
                 <button
                   onClick={() => {

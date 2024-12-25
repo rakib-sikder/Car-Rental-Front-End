@@ -16,6 +16,7 @@ import MyCars from "./page/MyCars";
 import MyBookings from "./page/MyBookings";
 import { AuthProviderAndContext } from "./ContextApi/Context";
 import CarDetails from "./page/CarDetails";
+import PrivateRoute from "./page/PrivateRoute";
 
 const router = createBrowserRouter([
   {
@@ -43,19 +44,19 @@ const router = createBrowserRouter([
       },
       {
         path: "/cars-details/:id",
-        element: <CarDetails></CarDetails>
+        element: <PrivateRoute><CarDetails></CarDetails></PrivateRoute>
       },
       {
         path: "/add-car",
-        element: <AddCar></AddCar>
+        element: <PrivateRoute><AddCar></AddCar></PrivateRoute>
       },
       {
         path: "/my-cars",
-        element: <MyCars></MyCars>
+        element: <PrivateRoute><MyCars></MyCars></PrivateRoute>
       },
       {
         path: "/my-bookings",
-        element: <MyBookings></MyBookings>
+        element: <PrivateRoute><MyBookings></MyBookings></PrivateRoute>
       },
     ]
   },

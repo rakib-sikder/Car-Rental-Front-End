@@ -100,16 +100,16 @@ const MyCars = () => {
   };
 // date strucure set
 function parseDate(dateStr) {
-  const [day, month, year] = dateStr.split("/"); // Split the string into day, month, year
+  const [day, month, year] = dateStr.split("-"); // Split the string into day, month, year
   return new Date(`${year}-${month}-${day}`); // Reformat to 'yyyy-mm-dd'
 }
 // sort cars by date
 const sortbyoldest = () => {
-  const oldest = [...cars].sort((a, b) => parseDate(a.date) - parseDate(b.date))
+  const oldest = [...cars].sort((a, b) => parseDate(a.dateAdded) - parseDate(b.dateAdded))
     setCars(oldest)
  }
  const sortbynewest = () => {
-  const newest = [...cars].sort((a, b) => parseDate(b.date) - parseDate(a.date))
+  const newest = [...cars].sort((a, b) => parseDate(b.dateAdded) - parseDate(a.dateAdded))
      setCars(newest)
 }
 
@@ -162,11 +162,11 @@ const sortbylowprice = () =>{
           <tbody className="text-center">
             {cars?.map((car) => (
               <tr key={car._id}>
-                <td>{car.imageUrl}</td>
+                <td><img src={car.imageUrl} alt="" className="w-[100px] h-[50px]" /></td>
                 <td>{car.model}</td>
                 <td>${car.dailyPrice}/day</td>
                 <td>{car.availability ? "Available" : "Unavailable"}</td>
-                <td>{car.date}</td>
+                <td>{car.dateAdded}</td>
                 <td className="flex justify-center">
                   <button
                     onClick={() => handleDelete(car._id)}

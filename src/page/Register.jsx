@@ -38,7 +38,7 @@ const Register = () => {
           notifys("Login Successfull")
         })
         .catch((error) => {
-          notifye(error)
+          notifye("Email already in use");
         });
 
       }else{

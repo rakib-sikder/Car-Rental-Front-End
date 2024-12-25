@@ -8,7 +8,7 @@ const AddCar = () => {
   const day = String(now.getDate());
   const month = String(now.getMonth() + 1);
   const year = String(now.getFullYear());
-  const date = `${day}/${month}/${year}`;
+  const date = `${year}-${month}-${day}`;
 
   const {notifys,notifye, currentUser} = useContext(AuthContext);
   const [formData, setFormData] = useState({
@@ -24,7 +24,7 @@ const AddCar = () => {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData({ ...formData, addedBy: currentUser?.email,date:date,booking:0,[name]: value});
+    setFormData({ ...formData, addedBy: currentUser?.email,dateAdded:date,booking:0,[name]: value});
   };
   
  

@@ -27,7 +27,7 @@ const Login = () => {
 
       })
       .catch((error) => {
-        notifye(error.message);
+        notifye("Invalid email or password");
       });
    
 

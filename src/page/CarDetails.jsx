@@ -7,6 +7,7 @@ const CarDetails = () => {
     const {currentUser ,notifys,notifye} = useContext(AuthContext);
       const { id } = useParams();
     const [car, setResponse] = useState({});
+    const [response, setCar] = useState({});
     console.log(car)
   const [showModal, setShowModal] = useState(false);
  
@@ -14,12 +15,12 @@ const CarDetails = () => {
   useEffect(() => {
     axios.get(`http://localhost:5000/cars/${id}`)
     .then((res) => { setResponse(res.data)})}
-    , [])
+    , [showModal])
   
 
   const handleBookNow = () => {
     if (!car.bookedBy ) {
-        setResponse({ ...car, booking: car.booking + 1 ,bookedBy:[{email:currentUser.email,booked:true,name:currentUser.displayName,bookingDate:new Date()}]});
+      setCar({ ...car,availability:false, booking: car.bookingCount + 1 ,bookedBy:[{email:currentUser.email,booked:true,name:currentUser.displayName,bookingDate:new Date()}]});
   
         setShowModal(true);
       }
@@ -31,8 +32,8 @@ const CarDetails = () => {
   const confirmBooking = () => {
     setShowModal(false);
     notifys("Booking Confirmed");    
-    axios.put(`http://localhost:5000/carsupdate/${car._id}`, car)
-    .then((res) => { console.log(res.data) })
+    axios.put(`http://localhost:5000/carsupdate/${car._id}`, response)
+    .then((res) => { setResponse(response) })
   };
 
 
