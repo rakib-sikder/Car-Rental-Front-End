@@ -18,7 +18,7 @@ const Banner = () => (
       </video>
 
       {/* Content */}
-      <div className=" bg-opacity-60 hero-overlay relative z-1 flex flex-col items-center justify-center h-full text-white p-8">
+      <div className=" bg-opacity-60 hero-overlay relative z-1 flex flex-col items-center justify-center h-full text-white px-8 py-16">
         <h1 className="text-4xl md:text-6xl font-bold mb-4">
         Drive Your Dreams Today!
         </h1>

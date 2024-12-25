@@ -74,6 +74,7 @@ const MyCars = () => {
   // update car details on click of update button
   const handleupdate = (e) => {
     e.preventDefault();
+    document.getElementById("my_modal_5").close()
     axios
       .put(`http://localhost:5000/carsupdate/${formData._id}`, formData)
       .then((response) => {
@@ -87,6 +88,7 @@ const MyCars = () => {
 
   // get spacefic car details to update
   const getupadtedid = (id) => {
+    
     axios
       .get(`http://localhost:5000/cars/${id}`)
       .then((response) => {

@@ -8,6 +8,10 @@ import { Link } from "react-router-dom";
 const AvailableCars = () => {
   const [viewMode, setViewMode] = useState("grid");
   const [cars, setCars] = useState([]);
+  const [filteredCars, setFilteredCars] = useState([]);
+
+  console.log(filteredCars);
+
   
   useEffect(() => {
 
@@ -15,10 +19,30 @@ const AvailableCars = () => {
     .then((response) =>{
       setCars(response.data);
     })
-    .catch( (error) =>{
-
-    });
   },[]);
+
+  const handleSearchChange = (e) => {
+    e.preventDefault();
+     const value = e.target.search.value;
+    setFilteredCars(cars?.filter(
+    (car) =>  car?.description?.toLowerCase()?.includes(value.toLowerCase())||
+    car?.model?.toLowerCase()?.includes(value.toLowerCase())||
+    car?.location?.toLowerCase()?.includes(value.toLowerCase())||
+    car?.dailyPrice?.toString()?.toLowerCase()?.includes(value.toLowerCase())||
+    car?.features?.toLowerCase()?.includes(value.toLowerCase())
+    ))
+    if (value.length>0) {
+      setCars(filteredCars);}
+    else{
+      axios.get('http://localhost:5000/cars')
+        .then((response) =>{
+          setCars(response.data);
+        })
+    }
+  }
+
+
+
 
   return (
     <div className="p-8">
@@ -31,11 +55,22 @@ const AvailableCars = () => {
            {viewMode === "grid" ? "List" : "Grid"} View
         </button>
       </div>
+      <div className="mb-6">
+      <form onSubmit={handleSearchChange} className="card-body">
+        
+        <div className="form-control">
+          <input type="text" name="search" placeholder="search" className="input input-bordered" />
+        </div>
+        <div className="form-control mt-6">
+          <button className="btn btn-primary">Search</button>
+        </div>
+      </form>
+      </div>
       <div className={`grid ${viewMode === "grid" ? "grid-cols-3 gap-6" : "grid-cols-1 gap-4"}`}>
         {cars.map((car, idx) => (
           <div key={idx} className="card bg-base-200 shadow-md">
             <figure>
-              <img src={car.image} alt={car.model} className="w-full h-48 object-cover" />
+              <img src={car.imageUrl} alt={car.model} className="w-full h-56 object-cover items-center" />
             </figure>
             <div className="card-body">
               <h3 className="card-title">{car.model}</h3>

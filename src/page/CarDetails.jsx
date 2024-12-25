@@ -7,9 +7,9 @@ const CarDetails = () => {
     const {currentUser ,notifys,notifye} = useContext(AuthContext);
       const { id } = useParams();
     const [car, setResponse] = useState({});
+    console.log(car)
   const [showModal, setShowModal] = useState(false);
  
-  
 
   useEffect(() => {
     axios.get(`http://localhost:5000/cars/${id}`)
