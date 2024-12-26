@@ -14,6 +14,8 @@ import {
 } from "firebase/auth";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import axios from "axios";
+
 
 export const AuthContext = createContext();
 const auth = getAuth(app);
@@ -24,6 +26,7 @@ export const AuthProviderAndContext = ({ children }) => {
   const [currentUser, setCurrentUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [typedMail, setTypedmail] = useState(null);
+
 
   // toast notification Success
   const notifys = (x) =>
@@ -55,6 +58,19 @@ export const AuthProviderAndContext = ({ children }) => {
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       setCurrentUser(user);
+      if(user){
+        axios.post("https://car-rental-system-zeta.vercel.app/jwt", {user:user.email},{withCredentials:true})
+        .then((response) => {
+          console.log(response);
+        })
+      }else{
+        axios.post("https://car-rental-system-zeta.vercel.app/logout",{},{withCredentials:true})
+          .then((response) => {
+            console.log(response);
+          })
+          console.log("no user");
+      }
+        console.log(user.email);
       setLoading(false);
     });
     return () => {
@@ -139,10 +155,9 @@ export const AuthProviderAndContext = ({ children }) => {
     setLoading(true);
     return signOut(auth)
       .then(() => {
+        setCurrentUser(null);
         x("/login");
       })
-      .catch((error) => {
-      });
   }
 
 

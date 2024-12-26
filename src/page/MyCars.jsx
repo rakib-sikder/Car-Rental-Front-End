@@ -12,7 +12,7 @@ const MyCars = () => {
 
   useEffect(() => {
     axios
-      .get(`https://car-rental-system-zeta.vercel.app/userAddedCars/${currentUser?.email}`)
+      .get(`https://car-rental-system-zeta.vercel.app/userAddedCars/${currentUser?.email}`,{withCredentials:true})
       .then((response) => {
         setCars(response?.data);
       })
@@ -38,7 +38,7 @@ const MyCars = () => {
           icon: "success",
         });
         axios
-          .delete(`https://car-rental-system-zeta.vercel.app/cars/${id}`)
+          .delete(`https://car-rental-system-zeta.vercel.app/cars/${id}`,{withCredentials:true})
           .then((res) => {
             setCars(cars.filter((car) => car._id !== id));
           })
@@ -69,7 +69,7 @@ const MyCars = () => {
     e.preventDefault();
     document.getElementById("my_modal_5").close();
     axios
-      .put(`https://car-rental-system-zeta.vercel.app/carsupdate/${formData._id}`, formData)
+      .put(`https://car-rental-system-zeta.vercel.app/carsupdate/${formData._id}`, formData,{withCredentials:true})
       .then((response) => {
         setdependensi(response.data.acknowledged);
         response.data.acknowledged && notifys("Car Updated Successfully");

@@ -22,7 +22,7 @@ const MyBooking = () => {
   // data loading from the server
   useEffect(() => {
     axios
-      .get(`https://car-rental-system-zeta.vercel.app/bookedcar/${currentUser?.email}`)
+      .get(`https://car-rental-system-zeta.vercel.app/bookedcar/${currentUser?.email}`,{withCredentials:true})
       .then((response) => {
         setBookings(response.data);
       })
