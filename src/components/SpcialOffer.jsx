@@ -9,7 +9,7 @@ const SpecialOffers = () => {
   useEffect(() => {
     axios.get("https://car-rental-system-zeta.vercel.app/cars")
       .then((response) => {
-        setOffers(response.data?.filter((car) => car.offer));
+        setOffers(response.data?.filter((car) => car.offer?.title ));
       });
   }, []);
 

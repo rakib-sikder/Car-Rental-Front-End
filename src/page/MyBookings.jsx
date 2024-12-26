@@ -62,8 +62,8 @@ const MyBooking = () => {
           ...selectedBooking.bookedBy[0],
           bookingDate: [newDates],
         },
-      ],
-    }).then((response) => {
+      ]
+    },{withCredentials:true}).then((response) => {
       notifys("Booking date modified successfully.");
     });
 
@@ -93,12 +93,12 @@ const MyBooking = () => {
   };
   const confirmCancelBooking = () => {
     setShowModalC(false);
-    axios.delete(`https://car-rental-system-zeta.vercel.app/cars/${cancelid}`).then((response) => {
+    axios.delete(`https://car-rental-system-zeta.vercel.app/cars/${cancelid}`,{withCredentials:true}).then((response) => {
       console.log(response.data);
     });
 
     axios
-      .post(`https://car-rental-system-zeta.vercel.app/addcar`, data)
+      .post(`https://car-rental-system-zeta.vercel.app/addcar`, data,{withCredentials:true})
 
       .then((res) => {
         console.log(res.data);

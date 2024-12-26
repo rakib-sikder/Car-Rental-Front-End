@@ -10,7 +10,7 @@ const AddCar = () => {
   const year = String(now.getFullYear());
   const date = `${year}-${month}-${day}`;
 
-  const {notifys,notifye, currentUser} = useContext(AuthContext);
+  const { notifys, notifye, currentUser } = useContext(AuthContext);
   const [formData, setFormData] = useState({
     model: "",
     dailyPrice: "",
@@ -24,22 +24,27 @@ const AddCar = () => {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData({ ...formData, offer:{}, addedBy: currentUser?.email,dateAdded:date,bookingCount:0,[name]: value});
+    setFormData({
+      ...formData,
+      offer: {},
+      addedBy: currentUser?.email,
+      dateAdded: date,
+      bookingCount: 0,
+      [name]: value,
+    });
   };
-  
- 
+
   const handleSubmit = (e) => {
     e.preventDefault();
-    
-    axios.post('https://car-rental-system-zeta.vercel.app/addcar', formData ,{withCredentials:true})
-    .then((response) =>{
-      response.data.acknowledged && notifys("Car Added Successfully");
 
-    })
-    .catch( (error) =>{
-      notifye(error);
-    });
-
+    axios
+      .post("https://car-rental-system-zeta.vercel.app/addcar", formData, { withCredentials: true })
+      .then((response) => {
+        response.data.acknowledged && notifys("Car Added Successfully");
+      })
+      .catch((error) => {
+        notifye(error);
+      });
   };
 
   return (

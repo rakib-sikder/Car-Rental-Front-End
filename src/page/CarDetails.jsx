@@ -4,55 +4,74 @@ import axios from "axios";
 import { AuthContext } from "../ContextApi/Context";
 
 const CarDetails = () => {
-    const {currentUser ,notifys,notifye} = useContext(AuthContext);
-      const { id } = useParams();
-    const [car, setResponse] = useState({});
-    const [response, setCar] = useState({});
-    console.log(car)
+  const { currentUser, notifys, notifye } = useContext(AuthContext);
+  const { id } = useParams();
+  const [car, setResponse] = useState({});
+  const [response, setCar] = useState({});
+  console.log(car);
   const [showModal, setShowModal] = useState(false);
-
 
   const now = new Date();
   const day = String(now.getDate());
   const month = String(now.getMonth() + 1);
   const year = String(now.getFullYear());
   const date = `${year}-${month}-${day}`;
- 
 
   useEffect(() => {
-    axios.get(`https://car-rental-system-zeta.vercel.app/cars/${id}`)
-    .then((res) => { setResponse(res.data)})}
-    , [showModal])
-  
+    axios
+      .get(`https://car-rental-system-zeta.vercel.app/cars/${id}`,{withCredentials:true})
+      .then((res) => {
+        setResponse(res.data);
+      });
+  }, [showModal]);
 
   const handleBookNow = () => {
-    if (!car.bookedBy ) {
-      setCar({ ...car,availability:false, bookingCount: car.bookingCount + 1 ,bookedBy:[{email:currentUser.email,booked:true,name:currentUser.displayName,bookingDate:[{start:date,end:date}]}]});
-  
-        setShowModal(true);
-      }
-        else {
-            notifye("You have already booked this car");
-        }
+    if (!car.bookedBy) {
+      setCar({
+        ...car,
+        availability: false,
+        bookingCount: car.bookingCount + 1,
+        bookedBy: [
+          {
+            email: currentUser.email,
+            booked: true,
+            name: currentUser.displayName,
+            bookingDate: [{ start: date, end: date }],
+          },
+        ],
+      });
+
+      setShowModal(true);
+    } else {
+      notifye("You have already booked this car");
+    }
   };
 
   const confirmBooking = () => {
     setShowModal(false);
-    notifys("Booking Confirmed");    
-    axios.put(`https://car-rental-system-zeta.vercel.app/carsupdate/${car._id}`, response)
-    .then((res) => { setResponse(response) })
+    notifys("Booking Confirmed");
+    axios
+      .put(
+        `https://car-rental-system-zeta.vercel.app/carsupdate/${car._id}`,
+        response,{withCredentials:true}
+      )
+      .then((res) => {
+        setResponse(response);
+      });
   };
 
-
-  const feature =car?.features?.split(',')
-
+  const feature = car?.features?.split(",");
 
   return (
     <div className="p-8 bg-base-100">
       <div className="max-w-4xl mx-auto">
         <div className="card card-bordered shadow-md">
           <figure>
-            <img src={car.imageUrl} alt={car.model} className="w-full h-72 object-cover" />
+            <img
+              src={car.imageUrl}
+              alt={car.model}
+              className="w-full h-72 object-cover"
+            />
           </figure>
           <div className="card-body">
             <h2 className="card-title text-3xl font-bold">{car.model}</h2>
@@ -98,13 +117,17 @@ const CarDetails = () => {
           <div className="modal-box">
             <h3 className="font-bold text-lg">Confirm Your Booking</h3>
             <p className="py-4">
-              You are about to book <strong>{car.model}</strong> for ${car.dailyPrice}/day.
+              You are about to book <strong>{car.model}</strong> for $
+              {car.dailyPrice}/day.
             </p>
             <div className="modal-action">
               <button className="btn btn-success" onClick={confirmBooking}>
                 Confirm
               </button>
-              <button className="btn btn-error" onClick={() => setShowModal(false)}>
+              <button
+                className="btn btn-error"
+                onClick={() => setShowModal(false)}
+              >
                 Cancel
               </button>
             </div>

@@ -81,7 +81,7 @@ const MyCars = () => {
 
   const getupadtedid = (id) => {
     axios
-      .get(`https://car-rental-system-zeta.vercel.app/cars/${id}`)
+      .get(`https://car-rental-system-zeta.vercel.app/cars/${id}`,{withCredentials:true})
       .then((response) => {
         setFormData(response.data);
       })
