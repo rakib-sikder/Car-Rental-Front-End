@@ -4,6 +4,8 @@ import { DotLottieReact } from "@lottiefiles/dotlottie-react";
 import { AuthContext } from "../ContextApi/Context";
 
 const Header = () => {
+  const [showMenu, setShowMenu] = useState(false);
+  console.log(showMenu);
 
   const { currentUser, SignOut } = useContext(AuthContext);
   const navigate = useNavigate();
@@ -12,7 +14,7 @@ const Header = () => {
       <NavLink
         to="/"
         className={({ isActive }) =>
-          `btn btn-ghost ${isActive ? "text-primary" : "text-base-content"}`
+          `btn btn-ghost ${isActive ? `text-primary ${setShowMenu(true)}` : `text-base-content ${setShowMenu(false)}`} `
         }
       >
         Home
@@ -20,7 +22,7 @@ const Header = () => {
       <NavLink
         to="/available-cars"
         className={({ isActive }) =>
-          `btn btn-ghost ${isActive ? "text-primary" : "text-base-content"}`
+          `btn btn-ghost ${isActive ? "text-primary" : `${showMenu? "text-white" : "text-base-content"}`}`
         }
       >
         Available Cars
@@ -30,7 +32,7 @@ const Header = () => {
           <NavLink
             to="/add-car"
             className={({ isActive }) =>
-              `btn btn-ghost ${isActive ? "text-primary" : "text-base-content"}`
+              `btn btn-ghost ${isActive ? "text-primary" : `${showMenu? "text-white" : "text-base-content"}`}`
             }
           >
             Add Car
@@ -38,7 +40,7 @@ const Header = () => {
           <NavLink
             to="/my-cars"
             className={({ isActive }) =>
-              `btn btn-ghost ${isActive ? "text-primary" : "text-base-content"}`
+              `btn btn-ghost ${isActive ? "text-primary" : `${showMenu? "text-white" : "text-base-content"}`}`
             }
           >
             My Cars
@@ -46,7 +48,7 @@ const Header = () => {
           <NavLink
             to="/my-bookings"
             className={({ isActive }) =>
-              `btn btn-ghost ${isActive ? "text-primary" : "text-base-content"}`
+              `btn btn-ghost ${isActive ? "text-primary" : `${showMenu? "text-white" : "text-base-content"}`}`
             }
           >
             My Bookings
@@ -59,7 +61,7 @@ const Header = () => {
   );
   return (
 
-    <div className="navbar bg-transparent">
+    <div className={`navbar fixed z-10 ${showMenu ? "bg-transparent  backdrop-blur-lg" : "bg-white"}`}>
       <div className="navbar-start">
         <div className="dropdown">
           <div

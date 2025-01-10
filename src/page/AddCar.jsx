@@ -48,7 +48,7 @@ const AddCar = () => {
   };
 
   return (
-    <div className="p-8 bg-base-100">
+    <div className="p-8 pt-20 bg-base-100">
       <h2 className="text-2xl font-bold mb-4">Add a New Car</h2>
       <form onSubmit={handleSubmit} className="grid grid-cols-1 gap-4">
         <input

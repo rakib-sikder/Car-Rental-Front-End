@@ -63,7 +63,7 @@ const CarDetails = () => {
   const feature = car?.features?.split(",");
 
   return (
-    <div className="p-8 bg-base-100">
+    <div className="p-8 pt-20 bg-base-100">
       <div className="max-w-4xl mx-auto">
         <div className="card card-bordered shadow-md">
           <figure>

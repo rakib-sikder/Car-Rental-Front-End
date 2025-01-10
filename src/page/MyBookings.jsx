@@ -108,7 +108,7 @@ const MyBooking = () => {
   };
 
   return (
-    <div className="p-4 sm:p-8 bg-base-100">
+    <div className="p-4 pt-20 sm:p-8 bg-base-100">
   <h2 className="text-xl sm:text-2xl font-bold mb-4 text-center">My Bookings</h2>
 
   {/* Responsive Table Container */}

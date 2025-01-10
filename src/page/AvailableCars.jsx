@@ -41,7 +41,7 @@ const AvailableCars = () => {
 
   return (
     <div className="p-4 sm:p-8">
-      <div className="flex flex-wrap justify-between items-center mb-6 gap-4">
+      <div className="flex flex-wrap justify-between pt-20 items-center mb-6 gap-4">
         <h2 className="text-xl sm:text-2xl font-bold">Available Cars</h2>
         <div className="flex flex-wrap gap-4">
           <button
@@ -75,13 +75,13 @@ const AvailableCars = () => {
           </div>
         </form>
       </div>
-      <div className={`grid ${viewMode === "grid" ? "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6" : "grid-cols-1 gap-4"}`}>
+      <div className={`grid ${viewMode === "grid" ? "grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6" : "grid-cols-1 gap-4"}`}>
         {cars.map((car, idx) => (
           <div key={idx} className="card bg-base-200 shadow-md">
             <figure>
-              <img src={car.imageUrl} alt={car.model} className="w-full h-56 object-cover" />
+              <img src={car.imageUrl} alt={car.model} className={`w-full ${viewMode === "grid" ? "h-56":"h-80"} object-cover`} />
             </figure>
-            <div className="card-body">
+            <div className="card-body p-5">
               <h3 className="card-title">{car.model}</h3>
               <h4>{car.availability ? <div className="badge badge-accent badge-outline">Available</div> : <div className="badge badge-error badge-outline">Unavailable</div>}</h4>
               <p className="text-sm">Location: {car.location}</p>

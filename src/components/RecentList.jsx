@@ -17,13 +17,13 @@ const RecentListings = () => {
     return (
         <section className="p-8 bg-base-100">
           <h2 className="text-2xl font-bold text-center mb-6">Recent Listings</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {cars?.map((car, idx) => (
               <div key={idx} onClick={()=>{navigate(`/cars-details/${car._id}`)}} className="card bg-base-100 shadow-md hover:shadow-lg ">
                 <figure>
                   <img src={car.imageUrl} alt={car.model} className="w-full h-48 object-cover" />
                 </figure>
-                <div className="card-body">
+                <div className="card-body p-4">
                   <h3 className="card-title">{car.model}</h3>
                   <p className="text-sm">Price: ${car.dailyPrice}/day</p>
                   <p className="text-sm">Availability: {car.availability ? "Available" : "Not Available"}</p>

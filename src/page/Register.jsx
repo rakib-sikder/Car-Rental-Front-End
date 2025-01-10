@@ -64,7 +64,7 @@ const Register = () => {
 
   return (
     <>
-      <div className="hero bg-base-100 min-h-screen">
+      <div className="hero pt-20 bg-base-100 min-h-screen">
         <div className="hero-content flex-col lg:flex-row-reverse">
           <div className="text-center  w-1/2 h-[400px] lg:text-left ">
             <DotLottieReact

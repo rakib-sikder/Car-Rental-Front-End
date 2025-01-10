@@ -5,7 +5,7 @@ import bgvideo from '../assets/Untitledvideo.mp4';
 const Banner = () => (
 
 
-<div className="relative  h-auto w-full overflow-hidden">
+<div className="relative  h-[400px] w-full overflow-hidden">
       {/* Background Video */}
       <video
         autoPlay
