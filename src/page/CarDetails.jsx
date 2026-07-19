@@ -2,6 +2,7 @@ import { useParams } from "react-router-dom";
 import { useContext, useEffect, useState } from "react";
 import axios from "axios";
 import { AuthContext } from "../ContextApi/Context";
+import { API_BASE } from "../api";
 
 const CarDetails = () => {
   const { currentUser, notifys, notifye } = useContext(AuthContext);
@@ -19,7 +20,7 @@ const CarDetails = () => {
 
   useEffect(() => {
     axios
-      .get(`https://car-rental-system-zeta.vercel.app/cars/${id}`,{withCredentials:true})
+      .get(`${API_BASE}/cars/${id}`,{withCredentials:true})
       .then((res) => {
         setResponse(res.data);
       });
@@ -52,7 +53,7 @@ const CarDetails = () => {
     notifys("Booking Confirmed");
     axios
       .put(
-        `https://car-rental-system-zeta.vercel.app/carsupdate/${car._id}`,
+        `${API_BASE}/carsupdate/${car._id}`,
         response,{withCredentials:true}
       )
       .then((res) => {
@@ -63,9 +64,9 @@ const CarDetails = () => {
   const feature = car?.features?.split(",");
 
   return (
-    <div className="p-8 pt-20 bg-base-100">
+    <div className="p-4 sm:p-8 pt-20 bg-neutral-50 min-h-screen">
       <div className="max-w-4xl mx-auto">
-        <div className="card card-bordered shadow-md">
+        <div className="card bg-white border border-neutral-100 shadow-md rounded-2xl overflow-hidden">
           <figure>
             <img
               src={car.imageUrl}
@@ -74,34 +75,33 @@ const CarDetails = () => {
             />
           </figure>
           <div className="card-body">
-            <h2 className="card-title text-3xl font-bold">{car.model}</h2>
-            <p className="text-lg">
-              <strong>Price per day:</strong> ${car.dailyPrice}
-            </p>
-            <p className="text-lg">
-              <strong>Availability:</strong>{" "}
+            <div className="flex items-start justify-between flex-wrap gap-2">
+              <h2 className="card-title text-2xl sm:text-3xl font-bold">{car.model}</h2>
               {car.availability ? (
-                <span className="text-green-500">Available</span>
+                <span className="badge badge-accent badge-outline">Available</span>
               ) : (
-                <span className="text-red-500">Unavailable</span>
+                <span className="badge badge-error badge-outline">Unavailable</span>
               )}
-            </p>
-            <p className="text-lg">
-              <strong>Location:</strong> {car.location}
-            </p>
-            <div>
-              <strong>Features:</strong>
-              <ul className="list-disc ml-6 mt-2">
-                {feature?.map((feature, idx) => (
-                  <li key={idx}>{feature}</li>
-                ))}
-              </ul>
             </div>
-            <p className="mt-4">
-              <strong>Description:</strong> {car.description}
+            <p className="text-2xl font-semibold text-blue-600">
+              ${car.dailyPrice}<span className="text-sm font-normal text-neutral-400">/day</span>
+            </p>
+            <p className="text-neutral-500">
+              📍 {car.location}
+            </p>
+            <div className="mt-2">
+              <p className="font-medium mb-2">Features</p>
+              <div className="flex flex-wrap gap-2">
+                {feature?.map((feature, idx) => (
+                  <span key={idx} className="text-xs rounded-full bg-blue-50 text-blue-700 px-3 py-1">{feature}</span>
+                ))}
+              </div>
+            </div>
+            <p className="mt-4 text-neutral-600">
+              {car.description}
             </p>
             <button
-              className="btn btn-primary mt-6"
+              className="btn btn-primary rounded-full mt-6 w-fit px-8"
               onClick={handleBookNow}
               disabled={!car.availability}
             >

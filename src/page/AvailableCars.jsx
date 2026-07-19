@@ -2,6 +2,7 @@ import axios from "axios";
 import { useEffect, useState, useCallback } from "react";
 import { Link } from "react-router-dom";
 import { debounce } from "lodash";
+import { API_BASE } from "../api";
 
 const AvailableCars = () => {
   const [viewMode, setViewMode] = useState("grid");
@@ -10,7 +11,7 @@ const AvailableCars = () => {
   const [searchTerm, setSearchTerm] = useState("");
 
   useEffect(() => {
-    axios.get('https://car-rental-system-zeta.vercel.app/cars')
+    axios.get(`${API_BASE}/cars`)
       .then((response) => {
         setCars(response.data);
       });
@@ -18,7 +19,7 @@ const AvailableCars = () => {
 
   const debouncedSearch = useCallback(
     debounce((value) => {
-      axios.get('https://car-rental-system-zeta.vercel.app/cars')
+      axios.get(`${API_BASE}/cars`)
         .then((response) => {
           const filteredCars = response.data.filter(
             (car) => car?.description?.toLowerCase()?.includes(value.toLowerCase()) ||
@@ -77,16 +78,18 @@ const AvailableCars = () => {
       </div>
       <div className={`grid ${viewMode === "grid" ? "grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6" : "grid-cols-1 gap-4"}`}>
         {cars.map((car, idx) => (
-          <div key={idx} className="card bg-base-200 shadow-md">
+          <div key={idx} className="card bg-white border border-neutral-100 shadow-sm hover:shadow-lg transition-shadow rounded-2xl overflow-hidden">
             <figure>
               <img src={car.imageUrl} alt={car.model} className={`w-full ${viewMode === "grid" ? "h-56":"h-80"} object-cover`} />
             </figure>
             <div className="card-body p-5">
-              <h3 className="card-title">{car.model}</h3>
-              <h4>{car.availability ? <div className="badge badge-accent badge-outline">Available</div> : <div className="badge badge-error badge-outline">Unavailable</div>}</h4>
-              <p className="text-sm">Location: {car.location}</p>
-              <p className="text-sm">Price: ${car.dailyPrice}/day</p>
-              <Link to={`/cars-details/${car._id}`} className="btn btn-primary mt-4">Book Now</Link>
+              <div className="flex items-center justify-between">
+                <h3 className="card-title text-base">{car.model}</h3>
+                {car.availability ? <div className="badge badge-accent badge-outline">Available</div> : <div className="badge badge-error badge-outline">Unavailable</div>}
+              </div>
+              <p className="text-sm text-neutral-500">{car.location}</p>
+              <p className="text-lg font-semibold text-blue-600">${car.dailyPrice}<span className="text-sm font-normal text-neutral-400">/day</span></p>
+              <Link to={`/cars-details/${car._id}`} className="btn btn-primary rounded-full mt-2">Book Now</Link>
             </div>
           </div>
         ))}

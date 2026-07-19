@@ -2,6 +2,7 @@
 import axios from "axios";
 import { useContext, useState } from "react";
 import { AuthContext } from "../ContextApi/Context";
+import { API_BASE } from "../api";
 
 const AddCar = () => {
   const now = new Date();
@@ -38,7 +39,7 @@ const AddCar = () => {
     e.preventDefault();
 
     axios
-      .post("https://car-rental-system-zeta.vercel.app/addcar", formData, { withCredentials: true })
+      .post(`${API_BASE}/addcar`, formData, { withCredentials: true })
       .then((response) => {
         response.data.acknowledged && notifys("Car Added Successfully");
       })

@@ -15,6 +15,7 @@ import {
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import axios from "axios";
+import { API_BASE } from "../api";
 
 
 export const AuthContext = createContext();
@@ -59,18 +60,17 @@ export const AuthProviderAndContext = ({ children }) => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       setCurrentUser(user);
       if(user){
-        axios.post("https://car-rental-system-zeta.vercel.app/jwt", {user:user.email},{withCredentials:true})
+        axios.post(`${API_BASE}/jwt`, {user:user.email},{withCredentials:true})
         .then((response) => {
           console.log(response);
         })
       }else{
-        axios.post("https://car-rental-system-zeta.vercel.app/logout",{},{withCredentials:true})
+        axios.post(`${API_BASE}/logout`,{},{withCredentials:true})
           .then((response) => {
             console.log(response);
           })
           console.log("no user");
       }
-        console.log(user.email);
       setLoading(false);
     });
     return () => {

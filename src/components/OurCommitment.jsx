@@ -26,6 +26,7 @@ const OurCommitment = () => {
 
   return (
     <section className="p-8 bg-gradient-to-r from-blue-50 to-blue-100">
+      <p className="text-center text-xs tracking-[0.3em] uppercase text-blue-600 mb-2">Why customers trust us</p>
       <h2 className="text-2xl sm:text-3xl font-bold text-center mb-8">
         Our Commitment to You
       </h2>
@@ -37,7 +38,7 @@ const OurCommitment = () => {
             whileInView={{ opacity: 1, scale: 1 }}
             viewport={{ once: true, amount: 0.5 }}
             transition={{ type: "spring", stiffness: 150, duration: 0.5 }}
-            className="bg-white shadow-lg rounded-lg p-6 text-center hover:shadow-2xl"
+            className="bg-white shadow-lg rounded-2xl p-6 text-center hover:shadow-2xl"
             whileHover={{ scale: 1.05 }}
           >
             <div className="text-5xl mb-4">{commitment.icon}</div>

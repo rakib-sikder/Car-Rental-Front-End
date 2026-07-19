@@ -5,6 +5,7 @@ import "react-datepicker/dist/react-datepicker.css"; // Import DatePicker styles
 import { LiaTrashAlt } from "react-icons/lia";
 import { AuthContext } from "../ContextApi/Context";
 import BookingChart from "../components/BookingChart";
+import { API_BASE } from "../api";
 
 const MyBooking = () => {
   const { currentUser,notifye,notifys } = useContext(AuthContext);
@@ -22,7 +23,7 @@ const MyBooking = () => {
   // data loading from the server
   useEffect(() => {
     axios
-      .get(`https://car-rental-system-zeta.vercel.app/bookedcar/${currentUser?.email}`,{withCredentials:true})
+      .get(`${API_BASE}/bookedcar/${currentUser?.email}`,{withCredentials:true})
       .then((response) => {
         setBookings(response.data);
       })
@@ -56,7 +57,7 @@ const MyBooking = () => {
     );
     setBookings(updatedBookings);
 
-    axios.put( `https://car-rental-system-zeta.vercel.app/carsupdate/${selectedBooking._id}`, {
+    axios.put( `${API_BASE}/carsupdate/${selectedBooking._id}`, {
       bookedBy: [
         {
           ...selectedBooking.bookedBy[0],
@@ -93,12 +94,12 @@ const MyBooking = () => {
   };
   const confirmCancelBooking = () => {
     setShowModalC(false);
-    axios.delete(`https://car-rental-system-zeta.vercel.app/cars/${cancelid}`,{withCredentials:true}).then((response) => {
+    axios.delete(`${API_BASE}/cars/${cancelid}`,{withCredentials:true}).then((response) => {
       console.log(response.data);
     });
 
     axios
-      .post(`https://car-rental-system-zeta.vercel.app/addcar`, data,{withCredentials:true})
+      .post(`${API_BASE}/addcar`, data,{withCredentials:true})
 
       .then((res) => {
         console.log(res.data);

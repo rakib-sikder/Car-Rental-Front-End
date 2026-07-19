@@ -3,6 +3,7 @@ import { useContext, useEffect, useState } from "react";
 import { AuthContext } from "../ContextApi/Context";
 import Swal from "sweetalert2";
 import { Link, useNavigate } from "react-router-dom";
+import { API_BASE } from "../api";
 
 const MyCars = () => {
   const navigate = useNavigate();
@@ -12,7 +13,7 @@ const MyCars = () => {
 
   useEffect(() => {
     axios
-      .get(`https://car-rental-system-zeta.vercel.app/userAddedCars/${currentUser?.email}`,{withCredentials:true})
+      .get(`${API_BASE}/userAddedCars/${currentUser?.email}`,{withCredentials:true})
       .then((response) => {
         setCars(response?.data);
       })
@@ -38,7 +39,7 @@ const MyCars = () => {
           icon: "success",
         });
         axios
-          .delete(`https://car-rental-system-zeta.vercel.app/cars/${id}`,{withCredentials:true})
+          .delete(`${API_BASE}/cars/${id}`,{withCredentials:true})
           .then((res) => {
             setCars(cars.filter((car) => car._id !== id));
           })
@@ -69,7 +70,7 @@ const MyCars = () => {
     e.preventDefault();
     document.getElementById("my_modal_5").close();
     axios
-      .put(`https://car-rental-system-zeta.vercel.app/carsupdate/${formData._id}`, formData,{withCredentials:true})
+      .put(`${API_BASE}/carsupdate/${formData._id}`, formData,{withCredentials:true})
       .then((response) => {
         setdependensi(response.data.acknowledged);
         response.data.acknowledged && notifys("Car Updated Successfully");
@@ -81,7 +82,7 @@ const MyCars = () => {
 
   const getupadtedid = (id) => {
     axios
-      .get(`https://car-rental-system-zeta.vercel.app/cars/${id}`,{withCredentials:true})
+      .get(`${API_BASE}/cars/${id}`,{withCredentials:true})
       .then((response) => {
         setFormData(response.data);
       })

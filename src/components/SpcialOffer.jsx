@@ -2,12 +2,13 @@ import axios from "axios";
 import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import { API_BASE } from "../api";
 
 const SpecialOffers = () => {
   const [offers, setOffers] = useState([]);
 
   useEffect(() => {
-    axios.get("https://car-rental-system-zeta.vercel.app/cars")
+    axios.get(`${API_BASE}/cars`)
       .then((response) => {
         setOffers(response.data?.filter((car) => car.offer?.title ));
       });
@@ -26,15 +27,18 @@ const SpecialOffers = () => {
             whileInView={{ x: 0, opacity: 1 }}
             viewport={{ once: true, amount: 0.5 }}
             transition={{ type: "spring", stiffness: 100, duration: 0.5 }}
-            className="card shadow-md p-6 rounded-lg text-white"
+            className="relative card shadow-md p-6 rounded-2xl text-white overflow-hidden"
             style={{ backgroundImage: `url(${offer.imageUrl})`, backgroundSize: 'cover', backgroundPosition: 'center' }}
-            whileHover={{ scale: 1.05 }}
+            whileHover={{ scale: 1.03 }}
           >
-            <h3 className="text-xl font-bold mb-4">{offer.offer.title}</h3>
-            <p className="mb-6">{offer.offer.discription}</p>
-            <Link to={`/cars-details/${offer._id} `} className="btn btn-outline text-white border-white hover:bg-white hover:text-black">
-              Book Now
-            </Link>
+            <div className="absolute inset-0 bg-black/40 rounded-2xl" />
+            <div className="relative">
+              <h3 className="text-xl font-bold mb-4">{offer.offer.title}</h3>
+              <p className="mb-6 text-neutral-100">{offer.offer.discription}</p>
+              <Link to={`/cars-details/${offer._id}`} className="btn btn-outline btn-sm text-white border-white hover:bg-white hover:text-black rounded-full">
+                Book Now
+              </Link>
+            </div>
           </motion.div>
         ))}
       </div>

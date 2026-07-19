@@ -1,67 +1,40 @@
 import { Link, NavLink, useNavigate } from "react-router-dom";
-import { useContext, useState } from "react";
+import { useContext } from "react";
 import { DotLottieReact } from "@lottiefiles/dotlottie-react";
 import { AuthContext } from "../ContextApi/Context";
 
-const Header = () => {
-  const [showMenu, setShowMenu] = useState(false);
-  console.log(showMenu);
+const linkClass = ({ isActive }) =>
+  `btn btn-ghost ${isActive ? "text-primary" : "text-base-content"}`;
 
+const Header = () => {
   const { currentUser, SignOut } = useContext(AuthContext);
   const navigate = useNavigate();
   const navitems = (
     <>
-      <NavLink
-        to="/"
-        className={({ isActive }) =>
-          `btn btn-ghost ${isActive ? `text-primary ${setShowMenu(true)}` : `text-base-content ${setShowMenu(false)}`} `
-        }
-      >
+      <NavLink to="/" className={linkClass}>
         Home
       </NavLink>
-      <NavLink
-        to="/available-cars"
-        className={({ isActive }) =>
-          `btn btn-ghost ${isActive ? "text-primary" : `${showMenu? "text-white" : "text-base-content"}`}`
-        }
-      >
+      <NavLink to="/available-cars" className={linkClass}>
         Available Cars
       </NavLink>
-      {currentUser ? (
+      {currentUser && (
         <>
-          <NavLink
-            to="/add-car"
-            className={({ isActive }) =>
-              `btn btn-ghost ${isActive ? "text-primary" : `${showMenu? "text-white" : "text-base-content"}`}`
-            }
-          >
+          <NavLink to="/add-car" className={linkClass}>
             Add Car
           </NavLink>
-          <NavLink
-            to="/my-cars"
-            className={({ isActive }) =>
-              `btn btn-ghost ${isActive ? "text-primary" : `${showMenu? "text-white" : "text-base-content"}`}`
-            }
-          >
+          <NavLink to="/my-cars" className={linkClass}>
             My Cars
           </NavLink>
-          <NavLink
-            to="/my-bookings"
-            className={({ isActive }) =>
-              `btn btn-ghost ${isActive ? "text-primary" : `${showMenu? "text-white" : "text-base-content"}`}`
-            }
-          >
+          <NavLink to="/my-bookings" className={linkClass}>
             My Bookings
           </NavLink>
         </>
-      ) : (
-        <></>
       )}
     </>
   );
   return (
 
-    <div className={`navbar fixed z-10 ${showMenu ? "bg-transparent  backdrop-blur-lg" : "bg-white"}`}>
+    <div className="navbar fixed z-10 bg-white/90 backdrop-blur shadow-sm">
       <div className="navbar-start">
         <div className="dropdown">
           <div
@@ -91,7 +64,7 @@ const Header = () => {
             {navitems}
           </ul>
         </div>
-        
+
         <Link
         to="/"
         className="flex items-center text-lg font-bold text-primary text-nowrap"
@@ -104,7 +77,7 @@ const Header = () => {
         />
         Car Rentals
       </Link>
-        
+
       </div>
       <div className="navbar-center hidden lg:flex">
         <ul className="menu menu-horizontal px-1">
@@ -113,33 +86,21 @@ const Header = () => {
       </div>
       <div className="navbar-end">
         {currentUser ? (
-          <NavLink
+          <button
             onClick={() => {
               SignOut(navigate);
-              
+
             }}
-            className={({ isActive }) =>
-              `btn btn-primary btn-sm ${isActive ? "text-white" : "text-base-content"}`
-            }
+            className="btn btn-primary btn-sm text-white"
           >
             Logout
-          </NavLink>
+          </button>
         ) : (
           <>
-            <NavLink
-              to="/login"
-              className={({ isActive }) =>
-                `btn btn-ghost ${isActive ? "text-primary" : "text-base-content"}`
-              }
-            >
+            <NavLink to="/login" className={linkClass}>
               Login
             </NavLink>
-            <NavLink
-              to="/register"
-              className={({ isActive }) =>
-                `btn btn-ghost ${isActive ? "text-primary" : "text-base-content"}`
-              }
-            >
+            <NavLink to="/register" className={linkClass}>
               Register
             </NavLink>
           </>
