@@ -17,6 +17,7 @@ import MyBookings from "./page/MyBookings";
 import { AuthProviderAndContext } from "./ContextApi/Context";
 import CarDetails from "./page/CarDetails";
 import PrivateRoute from "./page/PrivateRoute";
+import { ErrorBoundary } from "./ErrorBoundary";
 
 const router = createBrowserRouter([
   {
@@ -68,8 +69,10 @@ const router = createBrowserRouter([
 
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
-    <AuthProviderAndContext>
-    <RouterProvider router={router} />
-    </AuthProviderAndContext>
+    <ErrorBoundary>
+      <AuthProviderAndContext>
+      <RouterProvider router={router} />
+      </AuthProviderAndContext>
+    </ErrorBoundary>
   </React.StrictMode>
 );
