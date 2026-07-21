@@ -7,6 +7,22 @@ import { AuthContext } from "../ContextApi/Context";
 import BookingChart from "../components/BookingChart";
 import { API_BASE } from "../api";
 
+const MS_PER_DAY = 1000 * 60 * 60 * 24;
+
+const toDateStr = (d) => {
+  const dt = new Date(d);
+  return `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, "0")}-${String(
+    dt.getDate()
+  ).padStart(2, "0")}`;
+};
+
+const rentalDays = (booking) => {
+  const range = booking?.bookedBy?.[0]?.bookingDate?.[0];
+  if (!range) return 1;
+  const days = Math.round((new Date(range.end) - new Date(range.start)) / MS_PER_DAY);
+  return Math.max(1, days);
+};
+
 const MyBooking = () => {
   const { currentUser,notifye,notifys } = useContext(AuthContext);
   const [bookings, setBookings] = useState([]);
@@ -33,11 +49,10 @@ const MyBooking = () => {
   const handleModifyDate = (booking) => {
     setSelectedBooking(booking);
     setNewDates({
-      start: booking.bookedBy[0].bookingDate[0].start,
-      end: booking.bookedBy[0].bookingDate[0].start,
+      start: new Date(booking.bookedBy[0].bookingDate[0].start),
+      end: new Date(booking.bookedBy[0].bookingDate[0].end),
     });
     setShowModal(true);
-    console.log(newDates);
   };
 
   // Confirm and save the new dates
@@ -47,11 +62,13 @@ const MyBooking = () => {
       return;
     }
 
+    const savedDates = { start: toDateStr(newDates.start), end: toDateStr(newDates.end) };
+
     const updatedBookings = bookings.map((booking) =>
       booking._id === selectedBooking._id
         ? {
             ...booking,
-            bookedBy: [{ ...booking.bookedBy[0], bookingDate: [newDates] }],
+            bookedBy: [{ ...booking.bookedBy[0], bookingDate: [savedDates] }],
           }
         : booking
     );
@@ -61,10 +78,10 @@ const MyBooking = () => {
       bookedBy: [
         {
           ...selectedBooking.bookedBy[0],
-          bookingDate: [newDates],
+          bookingDate: [savedDates],
         },
       ]
-    },{withCredentials:true}).then((response) => {
+    },{withCredentials:true}).then(() => {
       notifys("Booking date modified successfully.");
     });
 
@@ -143,7 +160,12 @@ const MyBooking = () => {
             <td className="px-2 py-2">
               {new Date(booking.bookedBy[0].bookingDate[0].end).toLocaleDateString()}
             </td>
-            <td className="px-2 py-2">${booking.dailyPrice}</td>
+            <td className="px-2 py-2">
+              <span className="font-medium">${booking.dailyPrice * rentalDays(booking)}</span>
+              <span className="block text-xs text-neutral-400">
+                ${booking.dailyPrice}/day × {rentalDays(booking)}d
+              </span>
+            </td>
             <td className="px-2 py-2">
               {new Date() < new Date(booking.bookedBy[0].bookingDate[0].start) ? (
                 <span className="text-yellow-500">Pending</span>
@@ -185,15 +207,39 @@ const MyBooking = () => {
           <label className="block mb-2 font-semibold">Start Date</label>
           <DatePicker
             selected={newDates.start}
-            onChange={(date) => setNewDates({ ...newDates, start: date })}
+            onChange={(date) => {
+              const next = { ...newDates, start: date };
+              if (next.end <= date) {
+                const end = new Date(date);
+                end.setDate(end.getDate() + 1);
+                next.end = end;
+              }
+              setNewDates(next);
+            }}
+            minDate={new Date()}
             className="input input-bordered w-full"
           />
           <label className="block mt-4 mb-2 font-semibold">End Date</label>
           <DatePicker
             selected={newDates.end}
             onChange={(date) => setNewDates({ ...newDates, end: date })}
+            minDate={(() => {
+              const d = new Date(newDates.start);
+              d.setDate(d.getDate() + 1);
+              return d;
+            })()}
             className="input input-bordered w-full"
           />
+          <p className="mt-3 text-sm text-neutral-500">
+            New total:{" "}
+            <span className="font-semibold text-blue-600">
+              $
+              {selectedBooking
+                ? selectedBooking.dailyPrice *
+                  Math.max(1, Math.round((newDates.end - newDates.start) / MS_PER_DAY))
+                : 0}
+            </span>
+          </p>
         </div>
         <div className="modal-action">
           <button className="btn btn-success" onClick={handleConfirm}>
