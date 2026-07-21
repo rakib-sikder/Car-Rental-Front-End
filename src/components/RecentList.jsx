@@ -1,44 +1,52 @@
 import axios from "axios";
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { API_BASE } from "../api";
+import { CarCard } from "./CarCard";
 
-// RecentListings.jsx
+// Home "Featured fleet" section — shows the most recently added cars.
 const RecentListings = () => {
-  const navigate = useNavigate();
   const [cars, setCars] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    axios.get(`${API_BASE}/recentAddedCars`)
-      .then((response) => {
-        setCars(response.data);
-      })
+    axios
+      .get(`${API_BASE}/recentAddedCars`)
+      .then((response) => setCars(response.data?.slice(0, 8) || []))
+      .finally(() => setLoading(false));
   }, []);
-    
-    return (
-        <section className="p-8 bg-base-100">
-          <h2 className="text-2xl sm:text-3xl font-bold text-center mb-8">Recent Listings</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {cars?.map((car, idx) => (
-              <div key={idx} onClick={()=>{navigate(`/cars-details/${car._id}`)}} className="card bg-white shadow-md hover:shadow-xl transition-shadow cursor-pointer rounded-2xl overflow-hidden border border-neutral-100">
-                <figure>
-                  <img src={car.imageUrl} alt={car.model} className="w-full h-48 object-cover" />
-                </figure>
-                <div className="card-body p-5">
-                  <h3 className="card-title text-base">{car.model}</h3>
-                  <p className="text-sm font-medium text-blue-600">${car.dailyPrice}/day</p>
-                  <p className="text-xs text-neutral-500">
-                    {car.availability ? <span className="text-green-600">● Available</span> : <span className="text-red-500">● Not Available</span>}
-                    {" · "}{car.bookingCount} bookings
-                  </p>
-                </div>
-              </div>
+
+  return (
+    <section className="bg-base-100 py-20">
+      <div className="container-x">
+        <div className="flex flex-wrap items-end justify-between gap-4">
+          <div>
+            <p className="eyebrow">Featured fleet</p>
+            <h2 className="mt-3 font-display text-3xl font-extrabold tracking-tight sm:text-4xl">
+              Freshly added rides
+            </h2>
+          </div>
+          <Link to="/available-cars" className="btn btn-outline btn-primary btn-sm">
+            Browse all cars
+          </Link>
+        </div>
+
+        {loading ? (
+          <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <div key={i} className="h-80 animate-pulse rounded-2xl bg-base-200" />
             ))}
           </div>
-        </section>
-      );
-}
-    
-  
-  export default RecentListings;
-  
+        ) : (
+          <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+            {cars.map((car) => (
+              <CarCard key={car._id} car={car} />
+            ))}
+          </div>
+        )}
+      </div>
+    </section>
+  );
+};
+
+export default RecentListings;

@@ -1,229 +1,269 @@
 import axios from "axios";
 import { useEffect, useMemo, useState } from "react";
-import { Link } from "react-router-dom";
+import { useSearchParams } from "react-router-dom";
 import { API_BASE } from "../api";
+import { CarCard } from "../components/CarCard";
+import { carClass, LOCATIONS } from "../lib/cars";
 import Loading from "../components/Loading";
 
-// `offer` is an object ({title, discription}) in the seeded data but may be a
-// plain string for user-added cars — render whichever shape we get.
-const offerLabel = (offer) => {
-  if (!offer) return null;
-  if (typeof offer === "string") return offer;
-  return offer.title || null;
-};
+const CLASSES = ["Compact", "Sedan", "SUV", "Electric", "Truck"];
 
 const AvailableCars = () => {
-  const [viewMode, setViewMode] = useState("grid");
+  const [params, setParams] = useSearchParams();
   const [allCars, setAllCars] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [sortBy, setSortBy] = useState("newest");
-  const [locationFilter, setLocationFilter] = useState("all");
-  const [onlyAvailable, setOnlyAvailable] = useState(false);
-  const [maxPrice, setMaxPrice] = useState("");
+  const [view, setView] = useState("grid");
+
+  const [search, setSearch] = useState(params.get("q") || "");
+  const [location, setLocation] = useState(params.get("location") || "all");
+  const [klass, setKlass] = useState(params.get("class") || "all");
+  const [maxPrice, setMaxPrice] = useState(params.get("max") || "");
+  const [onlyAvailable, setOnlyAvailable] = useState(params.get("avail") === "1");
+  const [sortBy, setSortBy] = useState(params.get("sort") || "newest");
+
+  const from = params.get("from");
+  const to = params.get("to");
 
   useEffect(() => {
     axios
       .get(`${API_BASE}/cars`)
-      .then((response) => setAllCars(response.data))
+      .then((r) => setAllCars(r.data || []))
       .finally(() => setLoading(false));
   }, []);
 
-  const locations = useMemo(
-    () => [...new Set(allCars.map((c) => c.location).filter(Boolean))].sort(),
-    [allCars]
-  );
+  // Keep the URL in sync so filtered views are shareable/bookmarkable.
+  useEffect(() => {
+    const next = {};
+    if (search) next.q = search;
+    if (location !== "all") next.location = location;
+    if (klass !== "all") next.class = klass;
+    if (maxPrice) next.max = maxPrice;
+    if (onlyAvailable) next.avail = "1";
+    if (sortBy !== "newest") next.sort = sortBy;
+    if (from) next.from = from;
+    if (to) next.to = to;
+    setParams(next, { replace: true });
+  }, [search, location, klass, maxPrice, onlyAvailable, sortBy]); // eslint-disable-line
 
   const cars = useMemo(() => {
-    const term = searchTerm.trim().toLowerCase();
+    const term = search.trim().toLowerCase();
     const filtered = allCars.filter((car) => {
       if (onlyAvailable && !car.availability) return false;
-      if (locationFilter !== "all" && car.location !== locationFilter) return false;
-      if (maxPrice !== "" && Number(car.dailyPrice) > Number(maxPrice)) return false;
+      if (location !== "all" && car.location !== location) return false;
+      if (klass !== "all" && carClass(car) !== klass) return false;
+      if (maxPrice && Number(car.dailyPrice) > Number(maxPrice)) return false;
       if (!term) return true;
       return (
-        car?.model?.toLowerCase()?.includes(term) ||
-        car?.location?.toLowerCase()?.includes(term) ||
-        car?.description?.toLowerCase()?.includes(term) ||
-        car?.features?.toLowerCase()?.includes(term)
+        car.model?.toLowerCase().includes(term) ||
+        car.location?.toLowerCase().includes(term) ||
+        car.description?.toLowerCase().includes(term) ||
+        car.features?.toLowerCase().includes(term)
       );
     });
-
     return [...filtered].sort((a, b) => {
       if (sortBy === "price-asc") return a.dailyPrice - b.dailyPrice;
       if (sortBy === "price-desc") return b.dailyPrice - a.dailyPrice;
+      if (sortBy === "popular") return (b.bookingCount || 0) - (a.bookingCount || 0);
       return new Date(b.dateAdded) - new Date(a.dateAdded);
     });
-  }, [allCars, searchTerm, sortBy, locationFilter, onlyAvailable, maxPrice]);
+  }, [allCars, search, location, klass, maxPrice, onlyAvailable, sortBy]);
 
-  const hasActiveFilters =
-    searchTerm !== "" || locationFilter !== "all" || onlyAvailable || maxPrice !== "";
+  const hasFilters =
+    search || location !== "all" || klass !== "all" || maxPrice || onlyAvailable;
 
   const clearFilters = () => {
-    setSearchTerm("");
-    setLocationFilter("all");
-    setOnlyAvailable(false);
+    setSearch("");
+    setLocation("all");
+    setKlass("all");
     setMaxPrice("");
+    setOnlyAvailable(false);
   };
 
-  if (loading) return <Loading />;
+  if (loading) return <div className="pt-16"><Loading label="Loading the fleet…" /></div>;
 
   return (
-    <div className="p-4 sm:p-8">
-      <div className="flex flex-wrap justify-between pt-20 items-center mb-6 gap-4">
-        <h2 className="text-xl sm:text-2xl font-bold">
-          Available Cars
-          <span className="ml-2 align-middle badge badge-ghost">
-            {cars.length} of {allCars.length}
-          </span>
-        </h2>
-        <button
-          onClick={() => setViewMode(viewMode === "grid" ? "list" : "grid")}
-          className="btn btn-outline btn-primary"
-        >
-          {viewMode === "grid" ? "List" : "Grid"} View
-        </button>
+    <div className="bg-base-200 pt-16">
+      {/* page header */}
+      <div className="bg-ink text-white">
+        <div className="container-x py-10">
+          <p className="eyebrow">Browse the fleet</p>
+          <h1 className="mt-2 font-display text-3xl font-extrabold tracking-tight sm:text-4xl">
+            Available cars
+          </h1>
+          <p className="mt-2 text-white/60">
+            {from && to ? (
+              <>Showing availability for {from} → {to}. </>
+            ) : null}
+            {allCars.length} cars across {LOCATIONS.length} cities.
+          </p>
+        </div>
       </div>
 
-      {/* Filter toolbar */}
-      <div className="mb-6 rounded-2xl border border-neutral-100 bg-white shadow-sm p-4 flex flex-wrap items-end gap-3">
-        <div className="form-control flex-1 min-w-[180px]">
-          <label className="label pb-1 pt-0">
-            <span className="label-text text-xs">Search</span>
-          </label>
-          <input
-            type="text"
-            placeholder="Model, location, feature…"
-            className="input input-bordered input-sm w-full"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
-        </div>
-        <div className="form-control min-w-[140px]">
-          <label className="label pb-1 pt-0">
-            <span className="label-text text-xs">Location</span>
-          </label>
-          <select
-            className="select select-bordered select-sm"
-            value={locationFilter}
-            onChange={(e) => setLocationFilter(e.target.value)}
-          >
-            <option value="all">All locations</option>
-            {locations.map((loc) => (
-              <option key={loc} value={loc}>
-                {loc}
-              </option>
-            ))}
-          </select>
-        </div>
-        <div className="form-control min-w-[130px]">
-          <label className="label pb-1 pt-0">
-            <span className="label-text text-xs">Max price/day</span>
-          </label>
-          <input
-            type="number"
-            min="0"
-            placeholder="Any"
-            className="input input-bordered input-sm w-full"
-            value={maxPrice}
-            onChange={(e) => setMaxPrice(e.target.value)}
-          />
-        </div>
-        <div className="form-control min-w-[140px]">
-          <label className="label pb-1 pt-0">
-            <span className="label-text text-xs">Sort by</span>
-          </label>
-          <select
-            className="select select-bordered select-sm"
-            value={sortBy}
-            onChange={(e) => setSortBy(e.target.value)}
-          >
-            <option value="newest">Newest first</option>
-            <option value="price-asc">Price: low to high</option>
-            <option value="price-desc">Price: high to low</option>
-          </select>
-        </div>
-        <label className="label cursor-pointer gap-2 pb-2">
-          <input
-            type="checkbox"
-            className="checkbox checkbox-primary checkbox-sm"
-            checked={onlyAvailable}
-            onChange={(e) => setOnlyAvailable(e.target.checked)}
-          />
-          <span className="label-text text-sm">Available only</span>
-        </label>
-        {hasActiveFilters && (
-          <button className="btn btn-ghost btn-sm" onClick={clearFilters}>
-            ✕ Clear filters
-          </button>
-        )}
-      </div>
+      <div className="container-x grid gap-8 py-10 lg:grid-cols-[260px_1fr]">
+        {/* filter sidebar */}
+        <aside className="lg:sticky lg:top-24 lg:self-start">
+          <div className="rounded-2xl border border-base-300 bg-base-100 p-5">
+            <div className="flex items-center justify-between">
+              <h2 className="font-display font-bold">Filters</h2>
+              {hasFilters && (
+                <button onClick={clearFilters} className="text-xs text-primary hover:underline">
+                  Clear all
+                </button>
+              )}
+            </div>
 
-      {cars.length === 0 ? (
-        <div className="text-center py-20 text-neutral-400">
-          <p className="text-4xl mb-3">🚗</p>
-          <p className="font-medium text-neutral-600">No cars match those filters</p>
-          <p className="text-sm mt-1">Try widening the price range or clearing filters.</p>
-          {hasActiveFilters && (
-            <button className="btn btn-outline btn-primary btn-sm mt-4" onClick={clearFilters}>
-              Clear filters
-            </button>
-          )}
-        </div>
-      ) : (
-        <div
-          className={`grid ${
-            viewMode === "grid"
-              ? "grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6"
-              : "grid-cols-1 gap-4"
-          }`}
-        >
-          {cars.map((car) => (
-            <div
-              key={car._id}
-              className="card bg-white border border-neutral-100 shadow-sm hover:shadow-lg transition-shadow rounded-2xl overflow-hidden"
+            <label className="mt-4 block text-xs font-semibold uppercase tracking-wide text-base-content/50">
+              Search
+            </label>
+            <input
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Model, feature…"
+              className="input input-bordered input-sm mt-1.5 w-full"
+            />
+
+            <label className="mt-4 block text-xs font-semibold uppercase tracking-wide text-base-content/50">
+              Vehicle class
+            </label>
+            <div className="mt-2 flex flex-wrap gap-1.5">
+              <FilterChip active={klass === "all"} onClick={() => setKlass("all")}>All</FilterChip>
+              {CLASSES.map((c) => (
+                <FilterChip key={c} active={klass === c} onClick={() => setKlass(c)}>{c}</FilterChip>
+              ))}
+            </div>
+
+            <label className="mt-4 block text-xs font-semibold uppercase tracking-wide text-base-content/50">
+              Location
+            </label>
+            <select
+              value={location}
+              onChange={(e) => setLocation(e.target.value)}
+              className="select select-bordered select-sm mt-1.5 w-full"
             >
-              <figure className="relative">
-                <img
-                  src={car.imageUrl}
-                  alt={car.model}
-                  className={`w-full ${viewMode === "grid" ? "h-56" : "h-80"} object-cover`}
-                />
-                {offerLabel(car.offer) ? (
-                  <span className="absolute top-3 left-3 badge badge-warning font-medium shadow">
-                    {offerLabel(car.offer)}
-                  </span>
-                ) : null}
-              </figure>
-              <div className="card-body p-5">
-                <div className="flex items-center justify-between">
-                  <h3 className="card-title text-base">{car.model}</h3>
-                  {car.availability ? (
-                    <div className="badge badge-accent badge-outline">Available</div>
-                  ) : (
-                    <div className="badge badge-error badge-outline">Unavailable</div>
-                  )}
-                </div>
-                <p className="text-sm text-neutral-500">
-                  {car.location}
-                  {car.bookingCount ? (
-                    <span className="text-neutral-400"> · booked {car.bookingCount}×</span>
-                  ) : null}
-                </p>
-                <p className="text-lg font-semibold text-blue-600">
-                  ${car.dailyPrice}
-                  <span className="text-sm font-normal text-neutral-400">/day</span>
-                </p>
-                <Link to={`/cars-details/${car._id}`} className="btn btn-primary rounded-full mt-2">
-                  Book Now
-                </Link>
+              <option value="all">All cities</option>
+              {LOCATIONS.map((l) => (
+                <option key={l} value={l}>{l}</option>
+              ))}
+            </select>
+
+            <label className="mt-4 block text-xs font-semibold uppercase tracking-wide text-base-content/50">
+              Max price / day: {maxPrice ? `$${maxPrice}` : "Any"}
+            </label>
+            <input
+              type="range"
+              min="20"
+              max="120"
+              step="5"
+              value={maxPrice || 120}
+              onChange={(e) => setMaxPrice(e.target.value === "120" ? "" : e.target.value)}
+              className="range range-primary range-sm mt-2"
+            />
+
+            <label className="mt-4 flex cursor-pointer items-center gap-2">
+              <input
+                type="checkbox"
+                className="checkbox checkbox-primary checkbox-sm"
+                checked={onlyAvailable}
+                onChange={(e) => setOnlyAvailable(e.target.checked)}
+              />
+              <span className="text-sm">Available only</span>
+            </label>
+          </div>
+        </aside>
+
+        {/* results */}
+        <div>
+          <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
+            <p className="text-sm text-base-content/60">
+              <span className="font-semibold text-base-content">{cars.length}</span> car
+              {cars.length === 1 ? "" : "s"} found
+            </p>
+            <div className="flex items-center gap-2">
+              <select
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value)}
+                className="select select-bordered select-sm"
+              >
+                <option value="newest">Newest first</option>
+                <option value="price-asc">Price: low to high</option>
+                <option value="price-desc">Price: high to low</option>
+                <option value="popular">Most popular</option>
+              </select>
+              <div className="join">
+                <button
+                  onClick={() => setView("grid")}
+                  className={`btn btn-sm join-item ${view === "grid" ? "btn-primary" : "btn-ghost"}`}
+                  aria-label="Grid view"
+                >
+                  <GridIcon />
+                </button>
+                <button
+                  onClick={() => setView("list")}
+                  className={`btn btn-sm join-item ${view === "list" ? "btn-primary" : "btn-ghost"}`}
+                  aria-label="List view"
+                >
+                  <ListIcon />
+                </button>
               </div>
             </div>
-          ))}
+          </div>
+
+          {cars.length === 0 ? (
+            <div className="rounded-2xl border border-dashed border-base-300 bg-base-100 py-20 text-center">
+              <p className="text-4xl">🚗</p>
+              <p className="mt-3 font-display font-bold">No cars match those filters</p>
+              <p className="mt-1 text-sm text-base-content/60">Try widening the price range or clearing filters.</p>
+              {hasFilters && (
+                <button onClick={clearFilters} className="btn btn-outline btn-primary btn-sm mt-5">
+                  Clear filters
+                </button>
+              )}
+            </div>
+          ) : view === "grid" ? (
+            <div className="grid gap-6 sm:grid-cols-2 xl:grid-cols-3">
+              {cars.map((car) => (
+                <CarCard key={car._id} car={car} />
+              ))}
+            </div>
+          ) : (
+            <div className="flex flex-col gap-4">
+              {cars.map((car) => (
+                <CarCard key={car._id} car={car} view="list" />
+              ))}
+            </div>
+          )}
         </div>
-      )}
+      </div>
     </div>
   );
 };
+
+function FilterChip({ active, onClick, children }) {
+  return (
+    <button
+      onClick={onClick}
+      className={`rounded-full border px-3 py-1 text-xs font-medium transition-colors ${
+        active
+          ? "border-primary bg-primary text-primary-content"
+          : "border-base-300 bg-base-100 text-base-content/70 hover:border-primary/50"
+      }`}
+    >
+      {children}
+    </button>
+  );
+}
+
+const GridIcon = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+    <rect x="3" y="3" width="7" height="7" rx="1" /><rect x="14" y="3" width="7" height="7" rx="1" />
+    <rect x="3" y="14" width="7" height="7" rx="1" /><rect x="14" y="14" width="7" height="7" rx="1" />
+  </svg>
+);
+const ListIcon = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+    <line x1="8" y1="6" x2="21" y2="6" /><line x1="8" y1="12" x2="21" y2="12" /><line x1="8" y1="18" x2="21" y2="18" />
+    <line x1="3" y1="6" x2="3.01" y2="6" /><line x1="3" y1="12" x2="3.01" y2="12" /><line x1="3" y1="18" x2="3.01" y2="18" />
+  </svg>
+);
 
 export default AvailableCars;

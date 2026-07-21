@@ -1,291 +1,195 @@
 import axios from "axios";
 import { useContext, useEffect, useState } from "react";
-import DatePicker from "react-datepicker"; // Ensure you install react-datepicker
-import "react-datepicker/dist/react-datepicker.css"; // Import DatePicker styles
-import { LiaTrashAlt } from "react-icons/lia";
+import { Link } from "react-router-dom";
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
 import { AuthContext } from "../ContextApi/Context";
-import BookingChart from "../components/BookingChart";
 import { API_BASE } from "../api";
+import { PageHeader } from "../components/PageHeader";
+import { bookingRange, rentalDays, toDateStr } from "../lib/cars";
 
 const MS_PER_DAY = 1000 * 60 * 60 * 24;
 
-const toDateStr = (d) => {
-  const dt = new Date(d);
-  return `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, "0")}-${String(
-    dt.getDate()
-  ).padStart(2, "0")}`;
-};
-
-const rentalDays = (booking) => {
-  const range = booking?.bookedBy?.[0]?.bookingDate?.[0];
-  if (!range) return 1;
-  const days = Math.round((new Date(range.end) - new Date(range.start)) / MS_PER_DAY);
-  return Math.max(1, days);
-};
-
-const MyBooking = () => {
-  const { currentUser,notifye,notifys } = useContext(AuthContext);
+const MyBookings = () => {
+  const { currentUser, notifys, notifye } = useContext(AuthContext);
   const [bookings, setBookings] = useState([]);
-  const [refresh, setRefresh] = useState(false);
-  const [cancelid, setCancelid] = useState(false);
-  const [data, setNewData] = useState([]);
-  const [showModalC, setShowModalC] = useState(false);
-  const [selectedBooking, setSelectedBooking] = useState(null); // For the booking being modified
-  const [showModal, setShowModal] = useState(false); // Modal visibility
-  const [newDates, setNewDates] = useState({
-    start: new Date(),
-    end: new Date(),
-  }); // For date selection
-  // data loading from the server
+  const [loading, setLoading] = useState(true);
+  const [refresh, setRefresh] = useState(0);
+  const [modify, setModify] = useState(null); // booking being modified
+  const [dates, setDates] = useState({ start: new Date(), end: new Date() });
+
   useEffect(() => {
+    if (!currentUser?.email) return;
     axios
-      .get(`${API_BASE}/bookedcar/${currentUser?.email}`,{withCredentials:true})
-      .then((response) => {
-        setBookings(response.data);
-      })
-      .catch((error) => {});
-  }, [refresh]);
-  // Open modal and set initial dates
-  const handleModifyDate = (booking) => {
-    setSelectedBooking(booking);
-    setNewDates({
-      start: new Date(booking.bookedBy[0].bookingDate[0].start),
-      end: new Date(booking.bookedBy[0].bookingDate[0].end),
-    });
-    setShowModal(true);
+      .get(`${API_BASE}/bookedcar/${currentUser.email}`, { withCredentials: true })
+      .then((res) => setBookings(res.data || []))
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, [currentUser, refresh]);
+
+  const openModify = (b) => {
+    const r = bookingRange(b);
+    setDates({ start: new Date(r?.start || Date.now()), end: new Date(r?.end || Date.now()) });
+    setModify(b);
   };
 
-  // Confirm and save the new dates
-  const handleConfirm = () => {
-    if (newDates.start >= newDates.end) {
-      notifye("Start date must be before the end date.");
+  const confirmModify = () => {
+    if (dates.end <= dates.start) {
+      notifye("Return must be after pickup");
       return;
     }
-
-    const savedDates = { start: toDateStr(newDates.start), end: toDateStr(newDates.end) };
-
-    const updatedBookings = bookings.map((booking) =>
-      booking._id === selectedBooking._id
-        ? {
-            ...booking,
-            bookedBy: [{ ...booking.bookedBy[0], bookingDate: [savedDates] }],
-          }
-        : booking
-    );
-    setBookings(updatedBookings);
-
-    axios.put( `${API_BASE}/carsupdate/${selectedBooking._id}`, {
-      bookedBy: [
-        {
-          ...selectedBooking.bookedBy[0],
-          bookingDate: [savedDates],
-        },
-      ]
-    },{withCredentials:true}).then(() => {
-      notifys("Booking date modified successfully.");
-    });
-
-
-    setShowModal(false);
-  };
-  // Cancel booking and update the car availability
-
-  const cancelBookingBtn = (id) => {
-    const Cancel = bookings?.find((booking) => booking._id === id);
-    setNewData({
-      addedBy: Cancel.addedBy,
-      availability: true,
-      bookingCount: Cancel.bookingCount - 1,
-      dailyPrice: Cancel.dailyPrice,
-      dateAdded: Cancel.dateAdded,
-      description: Cancel.description,
-      features: Cancel.features,
-      imageUrl: Cancel.imageUrl,
-      location: Cancel.location,
-      model: Cancel.model,
-      offer: Cancel.offer,
-      registrationNumber: Cancel.registrationNumber,
-    });
-    setShowModalC(true); 
-    setCancelid(id);
-  };
-  const confirmCancelBooking = () => {
-    setShowModalC(false);
-    axios.delete(`${API_BASE}/cars/${cancelid}`,{withCredentials:true}).then((response) => {
-      console.log(response.data);
-    });
-
+    const saved = { start: toDateStr(dates.start), end: toDateStr(dates.end) };
     axios
-      .post(`${API_BASE}/addcar`, data,{withCredentials:true})
-
-      .then((res) => {
-        console.log(res.data);
-
-        setRefresh(!refresh);
-      });
+      .put(`${API_BASE}/carsupdate/${modify._id}`, {
+        bookedBy: [{ ...modify.bookedBy[0], bookingDate: [saved] }],
+      }, { withCredentials: true })
+      .then(() => {
+        notifys("Booking dates updated");
+        setModify(null);
+        setRefresh((n) => n + 1);
+      })
+      .catch(() => notifye("Update failed"));
   };
+
+  const cancel = (b) => {
+    if (!window.confirm("Cancel this booking?")) return;
+    // Free the car back up: clear the renter and mark available again.
+    axios
+      .put(`${API_BASE}/carsupdate/${b._id}`, {
+        availability: true,
+        bookedBy: [],
+        bookingCount: Math.max(0, (b.bookingCount || 1) - 1),
+      }, { withCredentials: true })
+      .then(() => {
+        notifys("Booking cancelled");
+        setBookings((bs) => bs.filter((x) => x._id !== b._id));
+      })
+      .catch(() => notifye("Cancel failed"));
+  };
+
+  const status = (b) => {
+    const r = bookingRange(b);
+    if (!r) return { label: "Confirmed", cls: "text-success" };
+    const now = new Date();
+    if (now < new Date(r.start)) return { label: "Upcoming", cls: "text-warning" };
+    if (now <= new Date(r.end)) return { label: "Active", cls: "text-success" };
+    return { label: "Completed", cls: "text-base-content/40" };
+  };
+
+  const grandTotal = bookings.reduce((s, b) => {
+    const r = bookingRange(b);
+    return s + b.dailyPrice * (r ? rentalDays(r.start, r.end) : 1);
+  }, 0);
 
   return (
-    <div className="p-4 pt-20 sm:p-8 bg-base-100">
-  <h2 className="text-xl sm:text-2xl font-bold mb-4 text-center">My Bookings</h2>
+    <div className="bg-base-200 min-h-screen">
+      <PageHeader eyebrow="Your trips" title="My bookings" subtitle="View, modify, or cancel the cars you've booked." />
+      <div className="container-x py-10">
+        {loading ? (
+          <div className="grid place-items-center py-20"><span className="loading loading-spinner loading-lg text-primary" /></div>
+        ) : bookings.length === 0 ? (
+          <div className="rounded-2xl border border-dashed border-base-300 bg-base-100 py-20 text-center">
+            <p className="text-4xl">🗓️</p>
+            <p className="mt-3 font-display font-bold">No bookings yet</p>
+            <p className="mt-1 text-sm text-base-content/60">Find a car and book your first trip.</p>
+            <Link to="/available-cars" className="btn btn-primary btn-sm mt-5">Browse cars</Link>
+          </div>
+        ) : (
+          <>
+            <div className="mb-6 grid gap-4 sm:grid-cols-3">
+              <SummaryCard label="Active bookings" value={bookings.length} />
+              <SummaryCard label="Total spend" value={`$${grandTotal}`} accent />
+              <SummaryCard label="Cities visited" value={new Set(bookings.map((b) => b.location)).size} />
+            </div>
 
-  {/* Responsive Table Container */}
-  <div className="overflow-x-auto">
-    <table className="table table-auto w-full">
-      <thead>
-        <tr className="bg-gray-200">
-          <th className="px-2 py-2">Car Image</th>
-          <th className="px-2 py-2">Car Model</th>
-          <th className="px-2 py-2">Booking Start</th>
-          <th className="px-2 py-2">Booking End</th>
-          <th className="px-2 py-2">Total Price</th>
-          <th className="px-2 py-2">Status</th>
-          <th className="px-2 py-2">Actions</th>
-        </tr>
-      </thead>
-      <tbody>
-        {bookings?.map((booking) => (
-          <tr key={booking._id} className="text-sm sm:text-base">
-            <td className="px-2 py-2">
-              <img
-                src={booking.imageUrl}
-                alt="Car"
-                className="w-16 h-16 sm:w-[100px] sm:h-[50px] object-cover"
-              />
-            </td>
-            <td className="px-2 py-2">{booking.model}</td>
-            <td className="px-2 py-2">
-              {new Date(booking.bookedBy[0].bookingDate[0].start).toLocaleDateString()}
-            </td>
-            <td className="px-2 py-2">
-              {new Date(booking.bookedBy[0].bookingDate[0].end).toLocaleDateString()}
-            </td>
-            <td className="px-2 py-2">
-              <span className="font-medium">${booking.dailyPrice * rentalDays(booking)}</span>
-              <span className="block text-xs text-neutral-400">
-                ${booking.dailyPrice}/day × {rentalDays(booking)}d
-              </span>
-            </td>
-            <td className="px-2 py-2">
-              {new Date() < new Date(booking.bookedBy[0].bookingDate[0].start) ? (
-                <span className="text-yellow-500">Pending</span>
-              ) : new Date() <= new Date(booking.bookedBy[0].bookingDate[0].end) ? (
-                <span className="text-green-500">Confirmed</span>
-              ) : (
-                <span className="text-red-500">Canceled</span>
-              )}
-            </td>
-            <td className="px-2 py-2">
-              <div className="flex flex-col sm:flex-row gap-2">
-                <button
-                  className="btn btn-sm btn-primary text-nowrap flex items-center justify-center"
-                  onClick={() => handleModifyDate(booking)}
-                >
-                  📅 Modify Date
-                </button>
-                <button
-                  onClick={() => cancelBookingBtn(booking._id)}
-                  className="btn btn-sm btn-error flex items-center justify-center text-white"
-                >
-                  <LiaTrashAlt className="mr-1" />
-                  Cancel
-                </button>
+            <div className="grid gap-4">
+              {bookings.map((b) => {
+                const r = bookingRange(b);
+                const days = r ? rentalDays(r.start, r.end) : 1;
+                const st = status(b);
+                return (
+                  <div key={b._id} className="flex flex-col gap-4 rounded-2xl border border-base-300 bg-base-100 p-5 sm:flex-row sm:items-center">
+                    <img src={b.imageUrl} alt={b.model} className="h-28 w-full rounded-xl object-cover sm:h-20 sm:w-32" />
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2">
+                        <h3 className="font-display font-bold">{b.model}</h3>
+                        <span className={`text-xs font-semibold ${st.cls}`}>● {st.label}</span>
+                      </div>
+                      <p className="text-sm text-base-content/60">📍 {b.location}</p>
+                      <p className="mt-1 text-sm text-base-content/60">
+                        {r ? `${r.start} → ${r.end}` : "—"} · {days} {days === 1 ? "day" : "days"}
+                      </p>
+                    </div>
+                    <div className="text-right">
+                      <p className="font-display text-xl font-extrabold text-primary">${b.dailyPrice * days}</p>
+                      <p className="text-xs text-base-content/50">${b.dailyPrice}/day</p>
+                    </div>
+                    <div className="flex gap-2 sm:flex-col">
+                      <button onClick={() => openModify(b)} className="btn btn-outline btn-sm">Modify</button>
+                      <button onClick={() => cancel(b)} className="btn btn-ghost btn-sm text-error">Cancel</button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </>
+        )}
+      </div>
+
+      {modify && (
+        <div className="modal modal-open">
+          <div className="modal-box">
+            <h3 className="font-display text-lg font-bold">Modify booking dates</h3>
+            <p className="mt-1 text-sm text-base-content/60">{modify.model}</p>
+            <div className="mt-4 space-y-3">
+              <div>
+                <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-base-content/50">Pickup</label>
+                <DatePicker
+                  selected={dates.start}
+                  onChange={(d) => {
+                    const next = { ...dates, start: d };
+                    if (next.end <= d) { const e = new Date(d); e.setDate(e.getDate() + 1); next.end = e; }
+                    setDates(next);
+                  }}
+                  minDate={new Date()}
+                  className="input input-bordered w-full"
+                />
               </div>
-            </td>
-          </tr>
-        ))}
-      </tbody>
-    </table>
-  </div>
-
-  {/* Modal for Modify Date */}
-  {showModal && (
-    <div className="modal modal-open">
-      <div className="modal-box">
-        <h3 className="font-bold text-lg">Modify Booking Dates</h3>
-        <div className="py-4">
-          <label className="block mb-2 font-semibold">Start Date</label>
-          <DatePicker
-            selected={newDates.start}
-            onChange={(date) => {
-              const next = { ...newDates, start: date };
-              if (next.end <= date) {
-                const end = new Date(date);
-                end.setDate(end.getDate() + 1);
-                next.end = end;
-              }
-              setNewDates(next);
-            }}
-            minDate={new Date()}
-            className="input input-bordered w-full"
-          />
-          <label className="block mt-4 mb-2 font-semibold">End Date</label>
-          <DatePicker
-            selected={newDates.end}
-            onChange={(date) => setNewDates({ ...newDates, end: date })}
-            minDate={(() => {
-              const d = new Date(newDates.start);
-              d.setDate(d.getDate() + 1);
-              return d;
-            })()}
-            className="input input-bordered w-full"
-          />
-          <p className="mt-3 text-sm text-neutral-500">
-            New total:{" "}
-            <span className="font-semibold text-blue-600">
-              $
-              {selectedBooking
-                ? selectedBooking.dailyPrice *
-                  Math.max(1, Math.round((newDates.end - newDates.start) / MS_PER_DAY))
-                : 0}
-            </span>
-          </p>
+              <div>
+                <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-base-content/50">Return</label>
+                <DatePicker
+                  selected={dates.end}
+                  onChange={(d) => setDates({ ...dates, end: d })}
+                  minDate={(() => { const d = new Date(dates.start); d.setDate(d.getDate() + 1); return d; })()}
+                  className="input input-bordered w-full"
+                />
+              </div>
+              <div className="rounded-xl bg-base-200 p-3 text-sm">
+                New total:{" "}
+                <span className="font-display font-extrabold text-primary">
+                  ${modify.dailyPrice * Math.max(1, Math.round((dates.end - dates.start) / MS_PER_DAY))}
+                </span>
+              </div>
+            </div>
+            <div className="modal-action">
+              <button onClick={() => setModify(null)} className="btn btn-ghost">Cancel</button>
+              <button onClick={confirmModify} className="btn btn-primary">Save dates</button>
+            </div>
+          </div>
+          <div className="modal-backdrop bg-black/40" onClick={() => setModify(null)} />
         </div>
-        <div className="modal-action">
-          <button className="btn btn-success" onClick={handleConfirm}>
-            Confirm
-          </button>
-          <button
-            className="btn btn-error"
-            onClick={() => setShowModal(false)}
-          >
-            Cancel
-          </button>
-        </div>
-      </div>
+      )}
     </div>
-  )}
-
-  {/* Modal for Cancel Booking */}
-  {showModalC && (
-    <div className="modal modal-open">
-      <div className="modal-box">
-        <h3 className="font-bold text-lg">Confirm Your Cancel</h3>
-        <p className="py-4">
-          Are you sure you want to cancel this booking?
-        </p>
-        <div className="modal-action">
-          <button
-            className="btn btn-error text-white"
-            onClick={confirmCancelBooking}
-          >
-            Yes
-          </button>
-          <button
-            className="btn btn-success text-white"
-            onClick={() => setShowModalC(false)}
-          >
-            No
-          </button>
-        </div>
-      </div>
-    </div>
-  )}
-
-  <BookingChart bookings={bookings} > </BookingChart>
-</div>
-
   );
 };
 
-export default MyBooking;
+function SummaryCard({ label, value, accent }) {
+  return (
+    <div className="rounded-2xl border border-base-300 bg-base-100 p-5">
+      <p className="text-sm text-base-content/60">{label}</p>
+      <p className={`mt-1 font-display text-3xl font-extrabold ${accent ? "text-primary" : ""}`}>{value}</p>
+    </div>
+  );
+}
+
+export default MyBookings;

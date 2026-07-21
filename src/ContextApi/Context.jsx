@@ -191,6 +191,9 @@ export const AuthProviderAndContext = ({ children }) => {
   const value = {
     currentUser,
     loading,
+    // False when Firebase env vars aren't configured (browse-only deployments) —
+    // lets pages offer a guest fallback instead of a login that can't succeed.
+    authAvailable: !!auth,
     setCurrentUser,
     signIn,
     signUp,

@@ -1,19 +1,21 @@
-import { useParams } from "react-router-dom";
+import { useParams, Link, useNavigate } from "react-router-dom";
 import { useContext, useEffect, useMemo, useState } from "react";
 import axios from "axios";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { AuthContext } from "../ContextApi/Context";
 import { API_BASE } from "../api";
-
-const MS_PER_DAY = 1000 * 60 * 60 * 24;
-
-const toDateStr = (d) => {
-  const dt = new Date(d);
-  return `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, "0")}-${String(
-    dt.getDate()
-  ).padStart(2, "0")}`;
-};
+import {
+  carClass,
+  CLASS_META,
+  featureList,
+  offerLabel,
+  offerText,
+  seatGuess,
+  toDateStr,
+  rentalDays,
+} from "../lib/cars";
+import Loading from "../components/Loading";
 
 const tomorrow = () => {
   const d = new Date();
@@ -21,42 +23,46 @@ const tomorrow = () => {
   return d;
 };
 
-// `offer` is an object ({title, discription}) in the seeded data but may be a
-// plain string for user-added cars — render whichever shape we get.
-const offerLabel = (offer) => {
-  if (!offer) return null;
-  if (typeof offer === "string") return offer;
-  return offer.title || null;
-};
+const GUEST = { email: "guest@overdrive.demo", displayName: "Guest renter" };
 
 const CarDetails = () => {
-  const { currentUser, notifys, notifye } = useContext(AuthContext);
+  const { currentUser, authAvailable, notifys, notifye } = useContext(AuthContext);
   const { id } = useParams();
-  const [car, setCar] = useState({});
+  const navigate = useNavigate();
+  const [car, setCar] = useState(null);
   const [showModal, setShowModal] = useState(false);
-  const [pickupDate, setPickupDate] = useState(new Date());
-  const [returnDate, setReturnDate] = useState(tomorrow);
+  const [pickup, setPickup] = useState(new Date());
+  const [ret, setRet] = useState(tomorrow);
 
   useEffect(() => {
-    axios.get(`${API_BASE}/cars/${id}`, { withCredentials: true }).then((res) => {
-      setCar(res.data);
-    });
+    axios.get(`${API_BASE}/cars/${id}`, { withCredentials: true }).then((res) => setCar(res.data));
   }, [id]);
 
-  const rentalDays = useMemo(() => {
-    const days = Math.round((returnDate - pickupDate) / MS_PER_DAY);
-    return Math.max(1, days);
-  }, [pickupDate, returnDate]);
+  const days = useMemo(() => rentalDays(pickup, ret), [pickup, ret]);
+  const total = days * (Number(car?.dailyPrice) || 0);
 
-  const totalPrice = rentalDays * (Number(car.dailyPrice) || 0);
+  if (!car) return <div className="pt-16"><Loading label="Loading car…" /></div>;
 
-  const handleBookNow = () => {
+  const cls = carClass(car);
+  const meta = CLASS_META[cls];
+  const features = featureList(car.features);
+  const offer = offerLabel(car.offer);
+
+  // Real auth gates booking when configured; otherwise a guest can book (demo).
+  const booker = currentUser || (!authAvailable ? GUEST : null);
+
+  const handleBook = () => {
+    if (!booker) {
+      notifye("Please sign in to book this car");
+      navigate("/login", { state: `/cars-details/${id}` });
+      return;
+    }
     if (car.bookedBy) {
       notifye("This car is already booked");
       return;
     }
-    if (returnDate <= pickupDate) {
-      notifye("Return date must be after the pickup date");
+    if (ret <= pickup) {
+      notifye("Return date must be after pickup");
       return;
     }
     setShowModal(true);
@@ -69,178 +75,208 @@ const CarDetails = () => {
       bookingCount: (car.bookingCount || 0) + 1,
       bookedBy: [
         {
-          email: currentUser.email,
+          email: booker.email,
           booked: true,
-          name: currentUser.displayName,
-          bookingDate: [{ start: toDateStr(pickupDate), end: toDateStr(returnDate) }],
+          name: booker.displayName,
+          bookingDate: [{ start: toDateStr(pickup), end: toDateStr(ret) }],
         },
       ],
     };
-
     axios
       .put(`${API_BASE}/carsupdate/${car._id}`, payload, { withCredentials: true })
       .then(() => {
         setCar(payload);
         setShowModal(false);
-        notifys("Booking confirmed");
+        notifys("Booking confirmed!");
       })
-      .catch(() => {
-        notifye("Could not confirm the booking — please try again");
-      });
+      .catch(() => notifye("Could not confirm the booking — please try again"));
   };
 
-  const features = car?.features?.split(",");
-
   return (
-    <div className="p-4 sm:p-8 pt-20 bg-neutral-50 min-h-screen">
-      <div className="max-w-5xl mx-auto grid gap-6 lg:grid-cols-[1fr_360px] items-start">
-        {/* Car info */}
-        <div className="card bg-white border border-neutral-100 shadow-md rounded-2xl overflow-hidden">
-          <figure className="relative">
-            <img src={car.imageUrl} alt={car.model} className="w-full h-72 object-cover" />
-            {offerLabel(car.offer) ? (
-              <span className="absolute top-3 left-3 badge badge-warning font-medium shadow">
-                {offerLabel(car.offer)}
+    <div className="bg-base-200 pt-16">
+      <div className="container-x py-8">
+        <nav className="mb-6 text-sm text-base-content/50" aria-label="Breadcrumb">
+          <Link to="/" className="hover:text-base-content">Home</Link>
+          <span className="mx-2">/</span>
+          <Link to="/available-cars" className="hover:text-base-content">Browse</Link>
+          <span className="mx-2">/</span>
+          <span className="text-base-content">{car.model}</span>
+        </nav>
+
+        <div className="grid gap-8 lg:grid-cols-[1fr_380px] lg:items-start">
+          {/* left: gallery + info */}
+          <div className="space-y-6">
+            <div className="relative overflow-hidden rounded-2xl border border-base-300">
+              <img src={car.imageUrl} alt={car.model} className="h-72 w-full object-cover sm:h-96" />
+              <span className="absolute left-4 top-4 badge border-0 bg-base-100/95 font-semibold shadow">
+                {meta.icon} {cls}
               </span>
-            ) : null}
-          </figure>
-          <div className="card-body">
-            <div className="flex items-start justify-between flex-wrap gap-2">
-              <h2 className="card-title text-2xl sm:text-3xl font-bold">{car.model}</h2>
-              {car.availability ? (
-                <span className="badge badge-accent badge-outline">Available</span>
-              ) : (
-                <span className="badge badge-error badge-outline">Unavailable</span>
+              {offer && (
+                <span className="absolute right-4 top-4 rounded-full bg-primary px-3 py-1.5 text-xs font-semibold text-primary-content shadow">
+                  {offer}
+                </span>
               )}
             </div>
-            <p className="text-neutral-500">📍 {car.location}</p>
 
-            <div className="mt-3 grid grid-cols-2 sm:grid-cols-3 gap-3 text-sm">
-              <div className="rounded-xl bg-neutral-50 border border-neutral-100 p-3">
-                <p className="text-neutral-400 text-xs">Daily rate</p>
-                <p className="font-semibold text-blue-600">${car.dailyPrice}/day</p>
+            <div className="rounded-2xl border border-base-300 bg-base-100 p-6">
+              <div className="flex flex-wrap items-start justify-between gap-3">
+                <div>
+                  <h1 className="font-display text-2xl font-extrabold sm:text-3xl">{car.model}</h1>
+                  <p className="mt-1 text-base-content/60">📍 {car.location}</p>
+                </div>
+                {car.availability ? (
+                  <span className="badge badge-success gap-1.5 text-success-content">● Available</span>
+                ) : (
+                  <span className="badge gap-1.5">● Booked</span>
+                )}
               </div>
-              <div className="rounded-xl bg-neutral-50 border border-neutral-100 p-3">
-                <p className="text-neutral-400 text-xs">Times booked</p>
-                <p className="font-semibold">{car.bookingCount ?? 0}</p>
+
+              {/* spec grid */}
+              <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
+                <Spec label="Class" value={`${meta.icon} ${cls}`} />
+                <Spec label="Seats" value={`${seatGuess(car)} people`} />
+                <Spec label="Times booked" value={car.bookingCount ?? 0} />
+                <Spec label="Reg. number" value={car.registrationNumber || "—"} />
               </div>
-              <div className="rounded-xl bg-neutral-50 border border-neutral-100 p-3">
-                <p className="text-neutral-400 text-xs">Registration</p>
-                <p className="font-semibold">{car.registrationNumber || "—"}</p>
+
+              <div className="mt-6">
+                <h2 className="font-display font-bold">Features</h2>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {features.map((f) => (
+                    <span key={f} className="rounded-full border border-base-300 bg-base-200 px-3 py-1 text-sm">
+                      {f}
+                    </span>
+                  ))}
+                </div>
+              </div>
+
+              <div className="mt-6">
+                <h2 className="font-display font-bold">About this car</h2>
+                <p className="mt-2 leading-relaxed text-base-content/70">{car.description}</p>
+                {offer && offerText(car.offer) && (
+                  <div className="mt-4 flex items-start gap-3 rounded-xl border border-primary/20 bg-primary/5 p-4">
+                    <span className="text-lg">🏷️</span>
+                    <div>
+                      <p className="text-sm font-semibold text-primary">{offer}</p>
+                      <p className="text-sm text-base-content/70">{offerText(car.offer)}</p>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
-
-            <div className="mt-3">
-              <p className="font-medium mb-2">Features</p>
-              <div className="flex flex-wrap gap-2">
-                {features?.map((feature, idx) => (
-                  <span key={idx} className="text-xs rounded-full bg-blue-50 text-blue-700 px-3 py-1">
-                    {feature}
-                  </span>
-                ))}
-              </div>
-            </div>
-            <p className="mt-4 text-neutral-600">{car.description}</p>
           </div>
-        </div>
 
-        {/* Booking panel */}
-        <div className="card bg-white border border-neutral-100 shadow-md rounded-2xl lg:sticky lg:top-24">
-          <div className="card-body">
-            <h3 className="font-bold text-lg">Book this car</h3>
+          {/* right: booking panel */}
+          <div className="rounded-2xl border border-base-300 bg-base-100 p-6 lg:sticky lg:top-24">
+            <div className="flex items-baseline justify-between">
+              <p>
+                <span className="font-display text-3xl font-extrabold">${car.dailyPrice}</span>
+                <span className="text-sm text-base-content/50">/day</span>
+              </p>
+              <span className="text-sm text-base-content/50">{cls}</span>
+            </div>
 
-            <label className="block text-sm font-medium mt-2 mb-1">Pickup date</label>
-            <DatePicker
-              selected={pickupDate}
-              onChange={(date) => {
-                setPickupDate(date);
-                if (returnDate <= date) {
-                  const next = new Date(date);
-                  next.setDate(next.getDate() + 1);
-                  setReturnDate(next);
-                }
-              }}
-              minDate={new Date()}
-              className="input input-bordered w-full"
-            />
-
-            <label className="block text-sm font-medium mt-3 mb-1">Return date</label>
-            <DatePicker
-              selected={returnDate}
-              onChange={(date) => setReturnDate(date)}
-              minDate={(() => {
-                const d = new Date(pickupDate);
-                d.setDate(d.getDate() + 1);
-                return d;
-              })()}
-              className="input input-bordered w-full"
-            />
-
-            <div className="mt-4 rounded-xl bg-neutral-50 border border-neutral-100 p-4 text-sm space-y-1.5">
-              <div className="flex justify-between">
-                <span className="text-neutral-500">
-                  ${car.dailyPrice}/day × {rentalDays} {rentalDays === 1 ? "day" : "days"}
-                </span>
-                <span className="font-medium">${totalPrice}</span>
+            <div className="mt-5 space-y-3">
+              <div>
+                <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-base-content/50">
+                  Pickup date
+                </label>
+                <DatePicker
+                  selected={pickup}
+                  onChange={(d) => {
+                    setPickup(d);
+                    if (ret <= d) {
+                      const n = new Date(d);
+                      n.setDate(n.getDate() + 1);
+                      setRet(n);
+                    }
+                  }}
+                  minDate={new Date()}
+                  className="input input-bordered w-full"
+                />
               </div>
-              <div className="flex justify-between border-t border-neutral-200 pt-1.5 text-base">
+              <div>
+                <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-base-content/50">
+                  Return date
+                </label>
+                <DatePicker
+                  selected={ret}
+                  onChange={(d) => setRet(d)}
+                  minDate={(() => {
+                    const d = new Date(pickup);
+                    d.setDate(d.getDate() + 1);
+                    return d;
+                  })()}
+                  className="input input-bordered w-full"
+                />
+              </div>
+            </div>
+
+            <div className="mt-5 space-y-2 rounded-xl bg-base-200 p-4 text-sm">
+              <div className="flex justify-between">
+                <span className="text-base-content/60">
+                  ${car.dailyPrice} × {days} {days === 1 ? "day" : "days"}
+                </span>
+                <span className="font-medium">${total}</span>
+              </div>
+              <div className="flex justify-between border-t border-base-300 pt-2 text-base">
                 <span className="font-semibold">Total</span>
-                <span className="font-bold text-blue-600">${totalPrice}</span>
+                <span className="font-display font-extrabold text-primary">${total}</span>
               </div>
             </div>
 
             <button
-              className="btn btn-primary rounded-full mt-4"
-              onClick={handleBookNow}
+              onClick={handleBook}
               disabled={!car.availability}
+              className="btn btn-primary mt-4 w-full"
             >
               {car.availability ? "Book now" : "Currently unavailable"}
             </button>
-            <p className="text-xs text-neutral-400 text-center">
-              Free cancellation from “My bookings”
+            <p className="mt-3 text-center text-xs text-base-content/50">
+              Free cancellation · pay at pickup · confirmed server-side
             </p>
           </div>
         </div>
       </div>
 
-      {/* Booking Confirmation Modal */}
       {showModal && (
         <div className="modal modal-open">
           <div className="modal-box">
-            <h3 className="font-bold text-lg">Confirm your booking</h3>
-            <div className="py-4 space-y-2 text-sm">
-              <div className="flex justify-between">
-                <span className="text-neutral-500">Car</span>
-                <span className="font-medium">{car.model}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-neutral-500">Pickup</span>
-                <span className="font-medium">{toDateStr(pickupDate)}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-neutral-500">Return</span>
-                <span className="font-medium">{toDateStr(returnDate)}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-neutral-500">
-                  ${car.dailyPrice}/day × {rentalDays} {rentalDays === 1 ? "day" : "days"}
-                </span>
-                <span className="font-bold text-blue-600">${totalPrice}</span>
-              </div>
+            <h3 className="font-display text-lg font-bold">Confirm your booking</h3>
+            <div className="mt-4 space-y-2 text-sm">
+              <Row label="Car" value={car.model} />
+              <Row label="Pickup" value={toDateStr(pickup)} />
+              <Row label="Return" value={toDateStr(ret)} />
+              <Row label={`$${car.dailyPrice} × ${days} ${days === 1 ? "day" : "days"}`} value={`$${total}`} strong />
             </div>
             <div className="modal-action">
-              <button className="btn btn-success" onClick={confirmBooking}>
-                Confirm
-              </button>
-              <button className="btn btn-error" onClick={() => setShowModal(false)}>
-                Cancel
-              </button>
+              <button className="btn btn-ghost" onClick={() => setShowModal(false)}>Cancel</button>
+              <button className="btn btn-primary" onClick={confirmBooking}>Confirm booking</button>
             </div>
           </div>
+          <div className="modal-backdrop bg-black/40" onClick={() => setShowModal(false)} />
         </div>
       )}
     </div>
   );
 };
+
+function Spec({ label, value }) {
+  return (
+    <div className="rounded-xl border border-base-300 bg-base-200 p-3">
+      <p className="text-xs text-base-content/50">{label}</p>
+      <p className="mt-0.5 font-semibold">{value}</p>
+    </div>
+  );
+}
+
+function Row({ label, value, strong }) {
+  return (
+    <div className="flex justify-between">
+      <span className="text-base-content/60">{label}</span>
+      <span className={strong ? "font-display font-extrabold text-primary" : "font-medium"}>{value}</span>
+    </div>
+  );
+}
 
 export default CarDetails;

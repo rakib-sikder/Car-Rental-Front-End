@@ -1,111 +1,70 @@
-import React, { useContext, useRef, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { FcGoogle } from 'react-icons/fc';
-import { IoMdEye, IoMdEyeOff } from 'react-icons/io';
-import { FaGithubSquare } from 'react-icons/fa';
-import { DotLottieReact } from '@lottiefiles/dotlottie-react';
-import { AuthContext } from '../ContextApi/Context';
+import { useContext, useRef, useState } from "react";
+import { Link, useNavigate, useLocation } from "react-router-dom";
+import { FcGoogle } from "react-icons/fc";
+import { IoMdEye, IoMdEyeOff } from "react-icons/io";
+import { FaGithub } from "react-icons/fa";
+import { AuthContext } from "../ContextApi/Context";
+import { AuthShell } from "../components/AuthShell";
 
 const Login = () => {
-  const { signInWithGithub, signInWithGoogle, signIn, setTypedmail, notifys, notifye } = useContext(AuthContext);
-
+  const { signInWithGithub, signInWithGoogle, signIn, setTypedmail, notifys, notifye } =
+    useContext(AuthContext);
   const navigate = useNavigate();
-  const ref =useRef()
-  const[showPassword,setShowPassword]=useState(false)
-  const clickfuntion = (e) => {
-    setTypedmail(ref.current.value);
-  }
+  const location = useLocation();
+  const emailRef = useRef();
+  const [showPassword, setShowPassword] = useState(false);
+  const dest = location.state || "/";
 
-  const handelsubmit = (e) => {
+  const handleSubmit = (e) => {
     e.preventDefault();
-    const email = e.target.email.value;
-    const password = e.target.password.value;
-    signIn(email, password)
+    signIn(e.target.email.value, e.target.password.value)
       .then(() => {
-        navigate('/');
-        notifys("Login Successfull");
-
+        navigate(dest);
+        notifys("Signed in successfully");
       })
-      .catch((error) => {
-        notifye("Invalid email or password");
-      });
-   
-
+      .catch(() => notifye("Invalid email or password"));
   };
 
   return (
-    <div className="hero pt-20 bg-base-100 min-h-screen">
-      <div className="hero-content flex-col lg:flex-row-reverse">
-      <div className="text-center w-1/2 h-[400px] lg:text-left ">
-                  <DotLottieReact
-                    src="https://lottie.host/9f8a6bb2-5947-4f37-ac6a-b903132bdcef/SNYQAK2Tjq.lottie"
-                    loop
-                    autoplay
-                  />
-                </div>
-        <div className="card bg-base-100 w-full max-w-sm shrink-0 shadow-2xl">
-          <div className="p-8 -mb-8">
-            <p className="text-4xl text-center mb-5">Login</p>
-            <button
-              className="btn  btn-sm btn-block mb-2"
-              onClick={() => {signInWithGithub(navigate,location)}}
-            >
-              <FaGithubSquare /> Continue With Github
-            </button>
-            <button
-              className="btn  btn-sm btn-block"
-              onClick={() => {signInWithGoogle(navigate,location)}}
-            >
-              <FcGoogle /> Continue With Google
-            </button>
-            <p>
-              Don't Have an account?{" "}
-              <Link to="/register">
-                <span className="text-red-500 ">Register</span>
-              </Link>
-            </p>
-
-            <div className="divider">or</div>
-          </div>
-          <form onSubmit={handelsubmit} className="card-body -mt-8">
-            <div className="form-control">
-              <label className="label">
-                <span className="label-text">Email</span>
-              </label>
-              <input
-                type="email"
-                name="email"
-
-                placeholder="email"
-                className="input input-bordered"
-                required
-              />
-            </div>
-            <div className="form-control relative">
-              <label className="label">
-                <span className="label-text">Password</span>
-              </label>
-              <input
-                name="password"
-                type={showPassword ? "text" : "password"}
-                placeholder="password"
-                className="input input-bordered"
-                required
-              />
-              <p onClick={()=>{setShowPassword(!showPassword)}} className="absolute right-4 top-12 w-5 h-5 text-2xl">{showPassword ? <IoMdEye /> : <IoMdEyeOff />}</p>
-              <label className="label">
-                <Link to="/passwordreset" onClick={clickfuntion} className="label-text-alt link link-hover">
-                  Forgot password?
-                </Link>
-              </label>
-            </div>
-          <div className="form-control mt-6">
-              <button className="btn btn-primary">Login</button>
-            </div>
-          </form>
-        </div>
+    <AuthShell title="Welcome back" subtitle="Sign in to manage your bookings and cars.">
+      <div className="grid grid-cols-2 gap-2">
+        <button onClick={() => signInWithGoogle(navigate, location)} className="btn btn-outline btn-sm gap-2">
+          <FcGoogle className="text-lg" /> Google
+        </button>
+        <button onClick={() => signInWithGithub(navigate, location)} className="btn btn-outline btn-sm gap-2">
+          <FaGithub className="text-lg" /> GitHub
+        </button>
       </div>
-    </div>
+
+      <div className="divider text-xs text-base-content/40">or with email</div>
+
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <div>
+          <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-base-content/50">Email</label>
+          <input ref={emailRef} type="email" name="email" required placeholder="you@email.com" className="input input-bordered w-full" />
+        </div>
+        <div>
+          <div className="mb-1.5 flex items-center justify-between">
+            <label className="text-xs font-semibold uppercase tracking-wide text-base-content/50">Password</label>
+            <Link to="/passwordreset" onClick={() => setTypedmail(emailRef.current?.value)} className="text-xs text-primary hover:underline">
+              Forgot?
+            </Link>
+          </div>
+          <div className="relative">
+            <input name="password" type={showPassword ? "text" : "password"} required placeholder="••••••••" className="input input-bordered w-full pr-11" />
+            <button type="button" onClick={() => setShowPassword((v) => !v)} className="absolute right-3 top-1/2 -translate-y-1/2 text-xl text-base-content/40" aria-label="Toggle password">
+              {showPassword ? <IoMdEye /> : <IoMdEyeOff />}
+            </button>
+          </div>
+        </div>
+        <button className="btn btn-primary w-full">Sign in</button>
+      </form>
+
+      <p className="mt-6 text-center text-sm text-base-content/60">
+        Don&apos;t have an account?{" "}
+        <Link to="/register" className="font-semibold text-primary hover:underline">Create one</Link>
+      </p>
+    </AuthShell>
   );
 };
 

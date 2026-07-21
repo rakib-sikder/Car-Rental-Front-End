@@ -1,77 +1,53 @@
 import * as React from "react";
 import * as ReactDOM from "react-dom/client";
-import {
-  createBrowserRouter,
-  RouterProvider,
-} from "react-router-dom";
+import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import "./index.css";
 import App from "./App";
+import Home from "./page/Home";
 import Login from "./page/Login";
 import Register from "./page/Register";
-import NotFound from "./page/NotFound";
 import AvailableCars from "./page/AvailableCars";
+import CarDetails from "./page/CarDetails";
 import AddCar from "./page/AddCar";
-import Home from "./page/Home";
 import MyCars from "./page/MyCars";
 import MyBookings from "./page/MyBookings";
-import { AuthProviderAndContext } from "./ContextApi/Context";
-import CarDetails from "./page/CarDetails";
+import Admin from "./page/Admin";
+import About from "./page/About";
+import Contact from "./page/Contact";
+import HowItWorksPage from "./page/HowItWorksPage";
+import NotFound from "./page/NotFound";
 import PrivateRoute from "./page/PrivateRoute";
+import { AuthProviderAndContext } from "./ContextApi/Context";
 import { ErrorBoundary } from "./ErrorBoundary";
 
 const router = createBrowserRouter([
   {
     path: "/",
-    element: <App></App>,
-    children:[
-      
-      {
-        path: '/',
-        element: <Home></Home>
-        
-      },
-      {
-        path: '/login',
-        element: <Login></Login>
-        
-      },
-      {
-        path: '/register',
-        element: <Register></Register>
-      },
-      {
-        path: "/available-cars",
-        element: <AvailableCars></AvailableCars>
-      },
-      {
-        path: "/cars-details/:id",
-        element: <PrivateRoute><CarDetails></CarDetails></PrivateRoute>
-      },
-      {
-        path: "/add-car",
-        element: <PrivateRoute><AddCar></AddCar></PrivateRoute>
-      },
-      {
-        path: "/my-cars",
-        element: <PrivateRoute><MyCars></MyCars></PrivateRoute>
-      },
-      {
-        path: "/my-bookings",
-        element: <PrivateRoute><MyBookings></MyBookings></PrivateRoute>
-      },
-    ]
+    element: <App />,
+    children: [
+      { path: "/", element: <Home /> },
+      { path: "/available-cars", element: <AvailableCars /> },
+      { path: "/cars-details/:id", element: <CarDetails /> },
+      { path: "/how-it-works", element: <HowItWorksPage /> },
+      { path: "/about", element: <About /> },
+      { path: "/contact", element: <Contact /> },
+      { path: "/login", element: <Login /> },
+      { path: "/register", element: <Register /> },
+      // Public demo admin panel (auth is unavailable on this deployment).
+      { path: "/admin", element: <Admin /> },
+      { path: "/add-car", element: <PrivateRoute><AddCar /></PrivateRoute> },
+      { path: "/my-cars", element: <PrivateRoute><MyCars /></PrivateRoute> },
+      { path: "/my-bookings", element: <PrivateRoute><MyBookings /></PrivateRoute> },
+    ],
   },
-  {
-    path: '*',
-    element:<NotFound></NotFound>
-  }
+  { path: "*", element: <NotFound /> },
 ]);
 
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
     <ErrorBoundary>
       <AuthProviderAndContext>
-      <RouterProvider router={router} />
+        <RouterProvider router={router} />
       </AuthProviderAndContext>
     </ErrorBoundary>
   </React.StrictMode>

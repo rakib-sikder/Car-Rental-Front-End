@@ -1,286 +1,170 @@
 import axios from "axios";
 import { useContext, useEffect, useState } from "react";
-import { AuthContext } from "../ContextApi/Context";
+import { Link } from "react-router-dom";
 import Swal from "sweetalert2";
-import { Link, useNavigate } from "react-router-dom";
+import { AuthContext } from "../ContextApi/Context";
 import { API_BASE } from "../api";
+import { PageHeader } from "../components/PageHeader";
+import { carClass, CLASS_META, LOCATIONS } from "../lib/cars";
 
 const MyCars = () => {
-  const navigate = useNavigate();
-  const [cars, setCars] = useState([]);
   const { currentUser, notifys, notifye } = useContext(AuthContext);
-  const [dependensi, setdependensi] = useState(true);
+  const [cars, setCars] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [sort, setSort] = useState("newest");
+  const [editing, setEditing] = useState(null);
+  const [refresh, setRefresh] = useState(0);
 
   useEffect(() => {
+    if (!currentUser?.email) return;
     axios
-      .get(`${API_BASE}/userAddedCars/${currentUser?.email}`,{withCredentials:true})
-      .then((response) => {
-        setCars(response?.data);
-      })
-      .catch((error) => {
-        notifye(error);
-      });
-  }, [currentUser, navigate, dependensi]);
+      .get(`${API_BASE}/userAddedCars/${currentUser.email}`, { withCredentials: true })
+      .then((res) => setCars(res.data || []))
+      .catch(() => notifye("Could not load your cars"))
+      .finally(() => setLoading(false));
+  }, [currentUser, refresh]);
+
+  const sorted = [...cars].sort((a, b) => {
+    if (sort === "price-high") return b.dailyPrice - a.dailyPrice;
+    if (sort === "price-low") return a.dailyPrice - b.dailyPrice;
+    if (sort === "oldest") return new Date(a.dateAdded) - new Date(b.dateAdded);
+    return new Date(b.dateAdded) - new Date(a.dateAdded);
+  });
 
   const handleDelete = (id) => {
     Swal.fire({
-      title: "Are you sure you want to delete this review?",
-      text: "You won't be able to revert this!",
+      title: "Delete this car?",
+      text: "This removes it from the fleet permanently.",
       icon: "warning",
       showCancelButton: true,
-      confirmButtonColor: "#3085d6",
-      cancelButtonColor: "#d33",
-      confirmButtonText: "Yes, delete it!",
-    }).then((result) => {
-      if (result.isConfirmed) {
-        Swal.fire({
-          title: "Deleted!",
-          text: "Your file has been deleted.",
-          icon: "success",
-        });
+      confirmButtonColor: "#FF5A1F",
+      cancelButtonColor: "#71717a",
+      confirmButtonText: "Yes, delete",
+    }).then((r) => {
+      if (r.isConfirmed) {
         axios
-          .delete(`${API_BASE}/cars/${id}`,{withCredentials:true})
-          .then((res) => {
-            setCars(cars.filter((car) => car._id !== id));
+          .delete(`${API_BASE}/cars/${id}`, { withCredentials: true })
+          .then(() => {
+            setCars((cs) => cs.filter((c) => c._id !== id));
+            Swal.fire({ title: "Deleted", icon: "success", timer: 1200, showConfirmButton: false });
           })
-          .catch((error) => {
-            notifye(error);
-          });
+          .catch(() => notifye("Delete failed"));
       }
     });
   };
 
-  const [formData, setFormData] = useState({
-    model: "",
-    dailyPrice: "",
-    availability: true,
-    registrationNumber: "",
-    features: "",
-    description: "",
-    imageUrl: "",
-    location: "",
-  });
-
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData({ ...formData, [name]: value });
-  };
-
-  const handleupdate = (e) => {
+  const saveEdit = (e) => {
     e.preventDefault();
-    document.getElementById("my_modal_5").close();
     axios
-      .put(`${API_BASE}/carsupdate/${formData._id}`, formData,{withCredentials:true})
-      .then((response) => {
-        setdependensi(response.data.acknowledged);
-        response.data.acknowledged && notifys("Car Updated Successfully");
+      .put(`${API_BASE}/carsupdate/${editing._id}`, editing, { withCredentials: true })
+      .then(() => {
+        notifys("Car updated");
+        setEditing(null);
+        setRefresh((n) => n + 1);
       })
-      .catch((error) => {
-        notifye(error);
-      });
-  };
-
-  const getupadtedid = (id) => {
-    axios
-      .get(`${API_BASE}/cars/${id}`,{withCredentials:true})
-      .then((response) => {
-        setFormData(response.data);
-      })
-      .catch((error) => {
-        notifye(error);
-      });
-  };
-
-  function parseDate(dateStr) {
-    const [day, month, year] = dateStr.split("-");
-    return new Date(`${year}-${month}-${day}`);
-  }
-
-  const sortbyoldest = () => {
-    const oldest = [...cars].sort((a, b) => parseDate(a.dateAdded) - parseDate(b.dateAdded));
-    setCars(oldest);
-  };
-
-  const sortbynewest = () => {
-    const newest = [...cars].sort((a, b) => parseDate(b.dateAdded) - parseDate(a.dateAdded));
-    setCars(newest);
-  };
-
-  const sortbyhighprice = () => {
-    const price = [...cars].sort((a, b) => b.dailyPrice - a.dailyPrice);
-    setCars(price);
-  };
-
-  const sortbylowprice = () => {
-    const price = [...cars].sort((a, b) => a.dailyPrice - b.dailyPrice);
-    setCars(price);
+      .catch(() => notifye("Update failed"));
   };
 
   return (
-    <div className="p-4 sm:p-8 bg-base-100">
-      <div className="flex flex-wrap justify-between items-center pt-20 mb-6 gap-4">
-        <h2 className="text-xl sm:text-2xl font-bold">My Cars</h2>
-        <div className="flex flex-wrap gap-4">
-          <div className="flex gap-4">
-            <button onClick={sortbynewest} className="btn btn-outline btn-primary btn-sm">
-              Newest
-            </button>
-            <button onClick={sortbyoldest} className="btn btn-outline btn-primary btn-sm">
-              Oldest
-            </button>
-          </div>
-          <div className="flex gap-4">
-            <button onClick={sortbyhighprice} className="btn btn-outline btn-primary btn-sm">
-              Highest
-            </button>
-            <button onClick={sortbylowprice} className="btn btn-outline btn-primary btn-sm">
-              Lowest
-            </button>
+    <div className="bg-base-200 min-h-screen">
+      <PageHeader eyebrow="Your garage" title="My cars" subtitle="Manage the cars you've listed on Overdrive." />
+      <div className="container-x py-10">
+        <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
+          <p className="text-sm text-base-content/60">
+            <span className="font-semibold text-base-content">{cars.length}</span> car{cars.length === 1 ? "" : "s"} listed
+          </p>
+          <div className="flex gap-2">
+            <select value={sort} onChange={(e) => setSort(e.target.value)} className="select select-bordered select-sm">
+              <option value="newest">Newest</option>
+              <option value="oldest">Oldest</option>
+              <option value="price-high">Price: high to low</option>
+              <option value="price-low">Price: low to high</option>
+            </select>
+            <Link to="/add-car" className="btn btn-primary btn-sm">+ Add car</Link>
           </div>
         </div>
-      </div>
-      {cars.length !== 0 ? (
-        <div className="overflow-x-auto">
-          <table className="table w-full">
-            <thead className="text-center">
-              <tr>
-                <th>Image</th>
-                <th>Model</th>
-                <th>Price</th>
-                <th>Availability</th>
-                <th>Booking count</th>
-                <th>Date</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody className="text-center">
-              {cars?.map((car) => (
-                <tr key={car._id}>
-                  <td><img src={car.imageUrl} alt="" className="w-[100px] h-[50px]" /></td>
-                  <td>{car.model}</td>
-                  <td>${car.dailyPrice}/day</td>
-                  <td>{car.availability ? "Available" : "Unavailable"}</td>
-                  <td>{car.bookingCount}</td>
-                  <td>{car.dateAdded}</td>
-                  <td className="flex flex-col sm:flex-row justify-center gap-2">
-                    <button
-                      onClick={() => handleDelete(car._id)}
-                      className="btn btn-sm btn-error"
-                    >
-                      Delete
-                    </button>
-                    <button
-                      className="btn btn-primary btn-sm"
-                      onClick={() => {
-                        document.getElementById("my_modal_5").showModal();
-                        getupadtedid(car._id);
-                      }}
-                    >
-                      Update
-                    </button>
-                  </td>
+
+        {loading ? (
+          <div className="grid place-items-center py-20"><span className="loading loading-spinner loading-lg text-primary" /></div>
+        ) : cars.length === 0 ? (
+          <div className="rounded-2xl border border-dashed border-base-300 bg-base-100 py-20 text-center">
+            <p className="text-4xl">🚗</p>
+            <p className="mt-3 font-display font-bold">No cars listed yet</p>
+            <p className="mt-1 text-sm text-base-content/60">List your first car and start earning.</p>
+            <Link to="/add-car" className="btn btn-primary btn-sm mt-5">Add a car</Link>
+          </div>
+        ) : (
+          <div className="overflow-x-auto rounded-2xl border border-base-300 bg-base-100">
+            <table className="table">
+              <thead>
+                <tr className="text-xs uppercase tracking-wide text-base-content/50">
+                  <th>Car</th><th>Class</th><th>Price</th><th>Status</th><th>Bookings</th><th className="text-right">Actions</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      ) : (
-        <div className="flex flex-col gap-4 justify-center items-center">
-          <h1>No Cars Added Yet</h1>
-          <Link to="/add-car" className="btn btn-primary">
-            Add Cars
-          </Link>
+              </thead>
+              <tbody>
+                {sorted.map((car) => {
+                  const cls = carClass(car);
+                  return (
+                    <tr key={car._id} className="hover">
+                      <td>
+                        <div className="flex items-center gap-3">
+                          <img src={car.imageUrl} alt="" className="h-10 w-16 rounded-lg object-cover" />
+                          <div>
+                            <p className="font-medium">{car.model}</p>
+                            <p className="text-xs text-base-content/50">{car.location}</p>
+                          </div>
+                        </div>
+                      </td>
+                      <td><span className="badge badge-sm border">{CLASS_META[cls].icon} {cls}</span></td>
+                      <td className="font-medium">${car.dailyPrice}/day</td>
+                      <td>
+                        {car.availability
+                          ? <span className="badge badge-success badge-sm text-success-content">Available</span>
+                          : <span className="badge badge-sm">Booked</span>}
+                      </td>
+                      <td className="text-sm">{car.bookingCount ?? 0}</td>
+                      <td>
+                        <div className="flex justify-end gap-1">
+                          <button onClick={() => setEditing(car)} className="btn btn-ghost btn-xs">Edit</button>
+                          <button onClick={() => handleDelete(car._id)} className="btn btn-ghost btn-xs text-error">Delete</button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+
+      {editing && (
+        <div className="modal modal-open">
+          <div className="modal-box max-w-lg">
+            <h3 className="font-display text-lg font-bold">Edit car</h3>
+            <form onSubmit={saveEdit} className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
+              <input value={editing.model} onChange={(e) => setEditing({ ...editing, model: e.target.value })} placeholder="Model" className="input input-bordered sm:col-span-2" required />
+              <input type="number" value={editing.dailyPrice} onChange={(e) => setEditing({ ...editing, dailyPrice: e.target.value })} placeholder="Daily price" className="input input-bordered" required />
+              <select value={editing.location} onChange={(e) => setEditing({ ...editing, location: e.target.value })} className="select select-bordered">
+                {LOCATIONS.map((l) => <option key={l}>{l}</option>)}
+              </select>
+              <input value={editing.registrationNumber} onChange={(e) => setEditing({ ...editing, registrationNumber: e.target.value })} placeholder="Registration" className="input input-bordered" required />
+              <select value={String(editing.availability)} onChange={(e) => setEditing({ ...editing, availability: e.target.value === "true" })} className="select select-bordered">
+                <option value="true">Available</option>
+                <option value="false">Unavailable</option>
+              </select>
+              <input value={editing.imageUrl} onChange={(e) => setEditing({ ...editing, imageUrl: e.target.value })} placeholder="Image URL" className="input input-bordered sm:col-span-2" required />
+              <input value={editing.features} onChange={(e) => setEditing({ ...editing, features: e.target.value })} placeholder="Features" className="input input-bordered sm:col-span-2" required />
+              <textarea value={editing.description} onChange={(e) => setEditing({ ...editing, description: e.target.value })} placeholder="Description" rows={2} className="textarea textarea-bordered sm:col-span-2" required />
+              <div className="modal-action sm:col-span-2">
+                <button type="button" onClick={() => setEditing(null)} className="btn btn-ghost">Cancel</button>
+                <button type="submit" className="btn btn-primary">Save changes</button>
+              </div>
+            </form>
+          </div>
+          <div className="modal-backdrop bg-black/40" onClick={() => setEditing(null)} />
         </div>
       )}
-      <dialog id="my_modal_5" className="modal modal-bottom sm:modal-middle">
-        <div className="modal-box">
-          <form onSubmit={handleupdate} className="grid grid-cols-1 gap-4">
-            <input
-              type="text"
-              name="model"
-              placeholder="Car Model"
-              className="input input-bordered"
-              onChange={handleChange}
-              value={formData.model}
-              required
-            />
-            <input
-              type="number"
-              name="dailyPrice"
-              placeholder="Daily Rental Price"
-              className="input input-bordered"
-              onChange={handleChange}
-              required
-              value={formData.dailyPrice}
-            />
-            <select
-              name="availability"
-              className="select select-bordered"
-              onChange={handleChange}
-              required
-              value={formData.availability}
-            >
-              <option value={true}>Available</option>
-              <option value={false}>Unavailable</option>
-            </select>
-            <input
-              type="text"
-              name="registrationNumber"
-              placeholder="Vehicle Registration Number"
-              className="input input-bordered"
-              onChange={handleChange}
-              required
-              value={formData.registrationNumber}
-            />
-            <textarea
-              name="features"
-              placeholder="Features (e.g., GPS, AC)"
-              className="textarea textarea-bordered"
-              onChange={handleChange}
-              required
-              value={formData.features}
-            ></textarea>
-            <textarea
-              name="description"
-              placeholder="Description"
-              className="textarea textarea-bordered"
-              onChange={handleChange}
-              required
-              value={formData.description}
-            ></textarea>
-            <input
-              type="url"
-              name="imageUrl"
-              placeholder="Image URL"
-              className="input input-bordered"
-              onChange={handleChange}
-              required
-              value={formData.imageUrl}
-            />
-            <input
-              type="text"
-              name="location"
-              placeholder="Location"
-              className="input input-bordered"
-              onChange={handleChange}
-              required
-              value={formData.location}
-            />
-            <button type="submit" className="btn btn-primary">
-              Update
-            </button>
-          </form>
-          <button
-            onClick={() => {
-              document.getElementById("my_modal_5").close();
-              setdependensi(false);
-            }}
-            className="btn btn-error btn-block mt-1"
-          >
-            Cancel
-          </button>
-        </div>
-      </dialog>
     </div>
   );
 };
